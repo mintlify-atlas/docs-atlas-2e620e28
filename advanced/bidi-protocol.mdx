@@ -1,0 +1,142 @@
+---
+title: "BiDi protocol"
+description: "Use the W3C BiDi protocol for log streaming and real-time context events"
+---
+
+Since driver version 3.7.10, the UiAutomator2 driver supports a subset of the [W3C WebDriver BiDi specification](https://w3c.github.io/webdriver-bidi/). BiDi (bidirectional) enables the client to receive real-time events pushed from the driver, rather than polling for information.
+
+Only the events and commands listed on this page are supported. All other BiDi entities defined in the spec throw `not implemented` errors.
+
+<Note>
+Prefer BiDi log events over `mobile: startLogsBroadcast` for streaming device logs. BiDi log events are standardized, lower overhead, and do not require polling.
+</Note>
+
+## Enabling BiDi
+
+To use BiDi, provide the `webSocketUrl` capability (set to `true`) when creating a session. The driver returns a `webSocketUrl` in the session response that your client can connect to.
+
+```python python
+from appium.options.android import UiAutomator2Options
+
+options = UiAutomator2Options()
+options.platform_name = 'Android'
+options.web_socket_url = True  # Request a BiDi WebSocket URL
+# ... other capabilities
+
+driver = webdriver.Remote('http://localhost:4723', options=options)
+bidi_url = driver.capabilities.get('webSocketUrl')
+```
+
+## Supported events
+
+### `log.entryAdded`
+
+Emitted when the driver receives a new log entry. The UiAutomator2 driver supports two log types.
+
+<AccordionGroup>
+
+<Accordion title="syslog — device logcat lines">
+
+Emitted for both emulators and real devices. Each event contains a single logcat line from the device.
+
+- Events are always emitted with the `NATIVE_APP` context.
+- These events may be suppressed if the `appium:skipLogcatCapture` capability is set to `true`.
+
+</Accordion>
+
+<Accordion title="server — Appium server log lines">
+
+Emitted for both emulators and real devices. Each event contains a single Appium server log line.
+
+- Events are always emitted with the `NATIVE_APP` context.
+- Events are only emitted when the `get_server_logs` server security feature is enabled on the Appium server.
+
+</Accordion>
+
+</AccordionGroup>
+
+### `appium:uiautomator2.contextUpdate`
+
+Emitted whenever the active context changes, either explicitly (via a `switchContext` call) or implicitly (for example, when navigating to a web view). This event is also always emitted once during new session initialization.
+
+The event payload follows this CDDL schema:
+
+```cddl
+appium:uiautomator2.contextUpdated = {
+  method: "appium:uiautomator2.contextUpdated",
+  params: {
+    name: text,
+    type: "NATIVE" / "WEB",
+  },
+}
+```
+
+#### Event parameters
+
+| Parameter | Description |
+|-----------|-------------|
+| `name` | The name of the new context, for example `NATIVE_APP` or `WEBVIEW_com.example.app`. |
+| `type` | Either `NATIVE` or `WEB` depending on which context is currently active. |
+
+See the [GitHub feature ticket](https://github.com/appium/appium/issues/20741) for background on this event.
+
+## Web context and Chromedriver
+
+When the session is in a web context (a `WEBVIEW_*` or `CHROMIUM` context), BiDi messages may be forwarded to and from the embedded Chromedriver instance using the `appium:chromedriverForwardBiDi` capability. This allows clients to use Chrome DevTools Protocol (CDP) events through the BiDi interface when testing hybrid apps.
+
+## Example: subscribing to log events
+
+The example below uses the Python `websockets` library to connect to the BiDi endpoint and listen for logcat lines.
+
+```python python
+import asyncio
+import json
+import websockets
+
+async def stream_logcat(bidi_url):
+    async with websockets.connect(bidi_url) as ws:
+        # Subscribe to syslog (logcat) entries
+        subscribe_msg = {
+            "id": 1,
+            "method": "session.subscribe",
+            "params": {
+                "events": ["log.entryAdded"]
+            }
+        }
+        await ws.send(json.dumps(subscribe_msg))
+
+        async for raw in ws:
+            msg = json.loads(raw)
+            if msg.get("method") == "log.entryAdded":
+                entry = msg["params"]
+                print(f"[{entry.get('type')}] {entry.get('text')}")
+
+asyncio.run(stream_logcat(bidi_url))
+```
+
+## Example: listening for context changes
+
+```python python
+import asyncio
+import json
+import websockets
+
+async def watch_context(bidi_url):
+    async with websockets.connect(bidi_url) as ws:
+        subscribe_msg = {
+            "id": 1,
+            "method": "session.subscribe",
+            "params": {
+                "events": ["appium:uiautomator2.contextUpdate"]
+            }
+        }
+        await ws.send(json.dumps(subscribe_msg))
+
+        async for raw in ws:
+            msg = json.loads(raw)
+            if msg.get("method") == "appium:uiautomator2.contextUpdated":
+                params = msg["params"]
+                print(f"Context changed to: {params['name']} (type: {params['type']})")
+
+asyncio.run(watch_context(bidi_url))
+```

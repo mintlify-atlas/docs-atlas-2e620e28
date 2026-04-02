@@ -1,0 +1,106 @@
+---
+title: "Settings reference"
+description: "Complete reference for all runtime-configurable UiAutomator2 driver settings"
+---
+
+UiAutomator2 supports the [Appium Settings API](https://appium.io/docs/en/latest/guides/settings/), which lets you change driver behavior during a session without restarting it.
+
+<CodeGroup>
+
+```python Python
+# Read all current settings
+settings = driver.get_settings()
+print(settings)
+
+# Update settings at any point in the session
+driver.update_settings({
+    'waitForIdleTimeout': 5000,
+    'allowInvisibleElements': True,
+    'ignoreUnimportantViews': True,
+})
+```
+
+```java Java
+// Read all current settings
+Map<String, Object> settings = driver.getSettings();
+
+// Update settings
+HashMap<String, Object> updates = new HashMap<>();
+updates.put("waitForIdleTimeout", 5000);
+updates.put("allowInvisibleElements", true);
+driver.setSettings(updates);
+```
+
+</CodeGroup>
+
+---
+
+## Element interaction
+
+| Setting | Type | Default | Description |
+|---|---|---|---|
+| `actionAcknowledgmentTimeout` | `long` | `3000` | Maximum milliseconds to wait for an [`AccessibilityEvent`](http://developer.android.com/reference/android/view/accessibility/AccessibilityEvent.html) acknowledging generic actions such as clicks, text entry, and menu presses. Generally should not need to be changed. |
+| `waitForIdleTimeout` | `long` | `10000` | Milliseconds to wait for the UI to become idle before starting an element search. Consider lowering this value if you observe long delays when interacting with accessibility elements. |
+| `waitForSelectorTimeout` | `long` | `10000` | Milliseconds to wait for a widget to become visible so it can be matched by a selector. Only applies to the `-android uiautomator` location strategy. |
+| `scrollAcknowledgmentTimeout` | `long` | `200` | Milliseconds to wait for an [`AccessibilityEvent`](http://developer.android.com/reference/android/view/accessibility/AccessibilityEvent.html) acknowledging a scroll action. Generally should not need to be changed. |
+| `keyInjectionDelay` | `long` | `0` | Delay in milliseconds between key presses when injecting text input. |
+| `trackScrollEvents` | `boolean` | `true` | Whether to track scroll events so the server can calculate the `contentSize` attribute. Disabling this may speed up scroll actions slightly. |
+
+---
+
+## Page source and element tree
+
+| Setting | Type | Default | Description |
+|---|---|---|---|
+| `allowInvisibleElements` | `boolean` | `false` | Whether to include elements whose `displayed` attribute is `false` in the XML page source and element search results. |
+| `ignoreUnimportantViews` | `boolean` | `false` | Whether to compress the layout hierarchy by removing nodes that are not considered important for automation. Reduces tree size and can improve search performance. |
+| `enableMultiWindows` | `boolean` | `false` | Whether to include all windows the user can interact with (such as the on-screen keyboard) when building the XML page source. When `false`, only the single active application window is included. See the [multi-window testing guide](/guides/parallel-tests) for details. |
+| `enableTopmostWindowFromActivePackage` | `boolean` | `false` | Whether to limit page source and interactions to the highest Z-order window from the active package. See the [multi-window testing guide](/guides/parallel-tests) for details. |
+| `enableNotificationListener` | `boolean` | `true` | Whether to listen for toast notifications and include their text in the XML page source for up to 3500 ms after the notification expires. |
+| `normalizeTagNames` | `boolean` | `false` | Whether to apply Unicode-to-ASCII normalization on element class names used as XML tag names in the page source. Enable this if the app under test uses Unicode class names that cannot be parsed by Android's XML DOM parser. |
+| `simpleBoundsCalculation` | `boolean` | `false` | Whether to calculate element bounds as absolute values (`true`) rather than checking whether the element is partially obscured by other elements. Improves page source generation performance at the cost of bound precision. |
+| `snapshotMaxDepth` | `int` | `70` | Maximum depth for the page source tree snapshot. Must be in the range 1–500. A value that is too low may omit elements; a value that is too high may cause a `StackOverflowError`. |
+| `alwaysTraversableViewClasses` | `string` | `""` | Comma-separated list of glob patterns for class names that should always be traversed during tree building, even if the node is invisible. Useful for certain Jetpack Compose classes (e.g. `androidx.compose.ui.viewinterop.ViewFactoryHolder`). Available since driver version 5.0.3. |
+| `includeExtrasInPageSource` | `boolean` | `false` | Whether to include the `extras` attribute in the XML page source. The value is derived from [`getExtras()`](https://developer.android.com/reference/android/view/accessibility/AccessibilityNodeInfo#getExtras()) and may be large, which can affect page source generation performance. |
+| `includeA11yActionsInPageSource` | `boolean` | `false` | Whether to include the `actions` attribute in the XML page source. The value is a comma-separated list of accessibility action names from [`getActionList()`](https://developer.android.com/reference/android/view/accessibility/AccessibilityNodeInfo#getActionList()). |
+
+---
+
+## Element finding
+
+| Setting | Type | Default | Description |
+|---|---|---|---|
+| `shouldUseCompactResponses` | `boolean` | `true` | Whether `findElement` responses should include only the element UUID. Set to `false` to include the attributes listed in `elementResponseAttributes`. |
+| `elementResponseAttributes` | `string` | `""` | Comma-separated list of attributes to include in `findElement` responses. Requires `shouldUseCompactResponses` to be `false`. Supported values: `name`, `text`, `rect`, `enabled`, `displayed`, `selected`, `attribute/<element_attribute_name>`. |
+| `enforceXPath1` | `boolean` | `false` | Whether to force the XPath 1.0 interpreter for all XPath locators. By default, XPath 2.0 is used (driver version 4.25.0+). Enable this if you encounter issues with complex XPath 2.0 locators that cannot be resolved by the third-party interpreter. |
+| `limitXPathContextScope` | `boolean` | `true` | Whether to limit context-based XPath searches to descendants of the context element. When `false`, the full page source XML is used as the search document, and the context node is set as the starting point. Use `.` notation in your XPath expressions to avoid unintentionally searching the entire tree. |
+| `disableIdLocatorAutocompletion` | `boolean` | `false` | Whether to disable automatic prefixing of `<packageName>:id/` on resource ID locators. Useful for apps that use unprefixed identifiers, such as Jetpack Compose apps using `testTagsAsResourceId`. |
+| `currentDisplayId` | `int` | `DEFAULT_DISPLAY` | The display ID to use for element finding and screenshots. Retrieve the ID from `adb shell dumpsys display` (search for `mDisplayId`). Set to `-1` to reset to the default display. |
+
+<Note>
+  `elementResponseAttributes` only takes effect when `shouldUseCompactResponses` is `false`.
+</Note>
+
+---
+
+## Server and connection
+
+| Setting | Type | Default | Description |
+|---|---|---|---|
+| `serverPort` | `int` | `6790` | The port on the device used to start the UiAutomator2 server. Must be in the range 1024–65535. Do not confuse this with `appium:systemPort`, which is the host-side port. |
+| `wakeLockTimeout` | `long` | `86400000` | Milliseconds to hold the wake lock that prevents the device from sleeping during a test. Set to `0` to release the lock immediately. |
+| `shutdownOnPowerDisconnect` | `boolean` | `true` | Whether to shut down the server if the device is disconnected from a power source. |
+
+---
+
+## MJPEG streaming
+
+These settings control the built-in MJPEG screenshot broadcaster. See the [MJPEG guide](/advanced/mjpeg) for a full walkthrough.
+
+| Setting | Type | Default | Description |
+|---|---|---|---|
+| `mjpegServerPort` | `int` | `7810` | The port on the device used to start the MJPEG broadcaster. Must be in the range 1024–65535. |
+| `mjpegServerFramerate` | `int` | `10` | Maximum number of screenshots per second captured by the broadcaster. Must be in the range 1–60. |
+| `mjpegScalingFactor` | `int` | `50` | Percentage by which to downscale broadcaster screenshots. Must be in the range 1–100. `50` means screenshots are scaled to half their original dimensions, preserving aspect ratio. |
+| `mjpegServerScreenshotQuality` | `int` | `50` | JPEG compression quality percentage for broadcaster screenshots. Must be in the range 1–100. Lower values produce smaller files with more visible compression artifacts. |
+| `mjpegBilinearFiltering` | `boolean` | `false` | Whether to apply bilinear filtering when resizing screenshots in the broadcaster. May improve visual quality of scaled images at a small performance cost. |

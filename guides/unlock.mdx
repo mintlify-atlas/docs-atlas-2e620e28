@@ -1,0 +1,174 @@
+---
+title: "Device unlock"
+description: "Configure automatic device screen unlock for automated test sessions"
+---
+
+By default, UiAutomator2 checks for a lock screen at session startup and attempts to unlock the device if one is detected. If the device uses a PIN, pattern, or password, you must tell Appium how to unlock it.
+
+<Tip>
+  The most reliable setup for CI environments is to disable the lock screen on the device entirely and set `appium:skipUnlock` to `true`. This skips the lock screen check and is faster than any unlock strategy.
+</Tip>
+
+## Capabilities overview
+
+| Capability | Description |
+| --- | --- |
+| `appium:skipUnlock` | Skip the lock screen check on session startup. Set to `true` when the device has no lock screen configured. |
+| `appium:unlockType` | The type of lock screen to unlock. See [unlock types](#unlock-types) below. |
+| `appium:unlockKey` | The credential (PIN, password, or pattern) used to unlock the device. |
+| `appium:unlockStrategy` | `locksettings` (default) or `uiautomator`. See [unlock strategies](#unlock-strategies) below. |
+| `appium:unlockSuccessTimeout` | Maximum milliseconds to wait for the device to be unlocked. Default: `2000` ms. |
+
+## Unlock types
+
+Set `appium:unlockType` to one of the following values. Each type has a corresponding `appium:unlockKey` format.
+
+<AccordionGroup>
+  <Accordion title="pin">
+    The device is protected by a numeric PIN.
+
+    Set `appium:unlockKey` to the PIN digits, for example `1234`.
+
+    ```json
+    {
+      "appium:unlockType": "pin",
+      "appium:unlockKey": "1234"
+    }
+    ```
+  </Accordion>
+
+  <Accordion title="pinWithKeyEvent">
+    Same as `pin`, but uses ADB key events instead of the UiAutomator framework to enter the PIN. Use this if the standard `pin` type does not work on your device.
+
+    ```json
+    {
+      "appium:unlockType": "pinWithKeyEvent",
+      "appium:unlockKey": "1234"
+    }
+    ```
+  </Accordion>
+
+  <Accordion title="password">
+    The device is protected by an alphanumeric password.
+
+    Set `appium:unlockKey` to the password string, for example `abcd1234`.
+
+    ```json
+    {
+      "appium:unlockType": "password",
+      "appium:unlockKey": "abcd1234"
+    }
+    ```
+  </Accordion>
+
+  <Accordion title="pattern">
+    The device is protected by a swipe pattern.
+
+    The pattern grid is numbered like a phone dial pad — positions 1–9 from top-left to bottom-right:
+
+    ```
+    1 | 2 | 3
+    4 | 5 | 6
+    7 | 8 | 9
+    ```
+
+    Set `appium:unlockKey` to the sequence of positions your pattern traces. For example, a pattern that goes through positions 7, 2, 9, 8, 5, 4, 1, 6, 3 would use `unlockKey: "729854163"`.
+
+    ```json
+    {
+      "appium:unlockType": "pattern",
+      "appium:unlockKey": "729854163"
+    }
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Unlock strategies
+
+The `appium:unlockStrategy` capability controls the mechanism used to interact with the lock screen.
+
+### locksettings (default)
+
+Uses `adb shell locksettings` to clear the lock credential before unlocking and then restores it afterwards. Available by default since Android 8 / API level 26.
+
+This strategy is fast and reliable. The only trade-off is that the lock credential is temporarily removed during the unlock process.
+
+### uiautomator (legacy)
+
+Uses the UiAutomator framework to interact with the lock screen UI directly. Slower and potentially less stable than `locksettings`, but the only option for Android versions below API level 26, or when the test requires the device to maintain its lock settings at all times.
+
+```json
+{
+  "appium:unlockStrategy": "uiautomator",
+  "appium:unlockType": "pin",
+  "appium:unlockKey": "1234"
+}
+```
+
+## Mid-session lock control
+
+You can lock and unlock the device during a running session using the following mobile extension commands:
+
+- `mobile: lock` — locks the device screen.
+- `mobile: unlock` — unlocks the device using the same mechanism as session startup.
+- `mobile: isLocked` — returns `true` if the screen is currently locked.
+
+```python Python
+# Lock the device
+driver.execute_script('mobile: lock', {'seconds': 5})
+
+# Check if locked
+is_locked = driver.execute_script('mobile: isLocked')
+
+# Unlock
+driver.execute_script('mobile: unlock', {
+    'unlockType': 'pin',
+    'unlockKey': '1234'
+})
+```
+
+## Example capability sets
+
+<CodeGroup>
+
+```json Skip unlock (recommended for CI)
+{
+  "platformName": "Android",
+  "appium:automationName": "uiautomator2",
+  "appium:udid": "emulator-5554",
+  "appium:skipUnlock": true
+}
+```
+
+```json PIN unlock
+{
+  "platformName": "Android",
+  "appium:automationName": "uiautomator2",
+  "appium:udid": "emulator-5554",
+  "appium:unlockType": "pin",
+  "appium:unlockKey": "1111"
+}
+```
+
+```json Pattern unlock
+{
+  "platformName": "Android",
+  "appium:automationName": "uiautomator2",
+  "appium:udid": "emulator-5554",
+  "appium:unlockType": "pattern",
+  "appium:unlockKey": "12369"
+}
+```
+
+```json Password unlock with extended timeout
+{
+  "platformName": "Android",
+  "appium:automationName": "uiautomator2",
+  "appium:udid": "emulator-5554",
+  "appium:unlockType": "password",
+  "appium:unlockKey": "mySecret42",
+  "appium:unlockSuccessTimeout": 5000
+}
+```
+
+</CodeGroup>

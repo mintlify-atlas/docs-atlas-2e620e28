@@ -1,0 +1,85 @@
+---
+title: "Parallel tests"
+description: "Run automated tests concurrently across multiple Android devices and emulators"
+---
+
+UiAutomator2 supports running tests on multiple devices simultaneously. Two execution modes are available:
+
+- **Per-process** — each Appium server process manages a single session. Multiple processes run on different ports.
+- **Per-request** — a single Appium server process manages multiple sessions concurrently. This is the preferred approach: it uses fewer resources and gives better visibility into running sessions.
+
+<Tip>
+  If you are not running parallel tests, enable the `--session-override` server argument. This forces the server to close any pending session before opening a new one, preventing stale sessions from silently expiring in the background.
+</Tip>
+
+## Avoiding port conflicts
+
+Each session in a parallel run must be assigned unique port numbers. The driver uses several ports on the host machine, and collisions cause sessions to fail unpredictably.
+
+### Real device capabilities
+
+When running parallel sessions on physical devices, set these capabilities uniquely per session:
+
+| Capability | Description |
+| --- | --- |
+| `appium:udid` | The unique device identifier from `adb devices -l`. Required to target a specific device. |
+| `appium:systemPort` | Port for the UiAutomator2 server. Defaults to the first free port in the range 8200–8299. |
+| `appium:chromedriverPort` | Port for chromedriver communication when testing web views or Chrome. |
+| `appium:mjpegServerPort` | Port for the MJPEG video broadcast server, if recording video. |
+
+### Emulator capabilities
+
+When running parallel sessions on emulators, set these capabilities uniquely per session:
+
+| Capability | Description |
+| --- | --- |
+| `appium:avd` | Name of the Android Virtual Device. Each session must target a different emulator. |
+| `appium:systemPort` | Port for the UiAutomator2 server. |
+| `appium:chromedriverPort` | Port for chromedriver when testing web views or Chrome. |
+| `appium:mjpegServerPort` | Port for the MJPEG video broadcast server, if recording video. |
+
+## Example: two real-device sessions in Python
+
+The following example launches two sessions in parallel against different physical devices, using the `concurrent.futures` module:
+
+```python Python
+import concurrent.futures
+from appium import webdriver
+from appium.options import UiAutomator2Options
+
+def run_session(udid: str, system_port: int) -> None:
+    options = UiAutomator2Options()
+    options.platform_name = "Android"
+    options.udid = udid
+    options.system_port = system_port
+    options.app = "/path/to/app.apk"
+    options.app_package = "com.example.app"
+    options.app_activity = ".MainActivity"
+
+    driver = webdriver.Remote("http://localhost:4723", options=options)
+    try:
+        # your test steps here
+        pass
+    finally:
+        driver.quit()
+
+sessions = [
+    {"udid": "emulator-5554", "system_port": 8200},
+    {"udid": "emulator-5556", "system_port": 8201},
+]
+
+with concurrent.futures.ThreadPoolExecutor(max_workers=len(sessions)) as executor:
+    futures = [
+        executor.submit(run_session, s["udid"], s["system_port"])
+        for s in sessions
+    ]
+    for future in concurrent.futures.as_completed(futures):
+        future.result()  # re-raises any exception from the thread
+```
+
+## Tips for stable parallel runs
+
+- Assign a unique `appium:systemPort` to every session. The default auto-selection from the 8200–8299 range can produce collisions under concurrent session creation.
+- If your tests exercise web views or Chrome, also assign a unique `appium:chromedriverPort` and optionally `appium:webviewDevtoolsPort`.
+- Reserve a unique `appium:mjpegServerPort` per session if you use video recording.
+- On emulators, ensure each AVD is a separate virtual device with its own name. Two sessions cannot share the same running emulator instance.

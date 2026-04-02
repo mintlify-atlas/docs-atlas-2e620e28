@@ -1,0 +1,1053 @@
+---
+title: "App Management Commands"
+description: "Mobile extension commands for installing, launching, and managing Android applications"
+---
+
+These commands allow you to install, launch, query, and remove applications on Android devices. All commands are invoked via `executeScript` using the `mobile:` prefix.
+
+<CodeGroup>
+
+```java Java
+var result = driver.executeScript("mobile: installApp", Map.ofEntries(
+    Map.entry("appPath", "/path/to/app.apk")
+));
+```
+
+```python Python
+driver.execute_script('mobile: installApp', {'appPath': '/path/to/app.apk'})
+```
+
+```javascript WebdriverIO
+await driver.executeScript('mobile: installApp', [{ appPath: '/path/to/app.apk' }]);
+```
+
+```ruby Ruby
+@driver.execute_script 'mobile: installApp', { appPath: '/path/to/app.apk' }
+```
+
+</CodeGroup>
+
+---
+
+## mobile: installApp
+
+Installs an APK to the device under test. May raise `INSTALL_FAILED_VERSION_DOWNGRADE` if the installed version is newer than the one being installed.
+
+<AccordionGroup>
+  <Accordion title="Parameters">
+    <ParamField body="appPath" type="string" required>
+      The local `.apk` or `.apks` path on the server filesystem, or a remote URL pointing to the package.
+    </ParamField>
+
+    <ParamField body="timeout" type="number">
+      Milliseconds to wait until the app is installed. Defaults to `6000`.
+    </ParamField>
+
+    <ParamField body="allowTestPackages" type="boolean">
+      Set to `true` to allow installation of test packages. Defaults to `false`.
+    </ParamField>
+
+    <ParamField body="useSdcard" type="boolean">
+      Set to `true` to install the app on the SD card instead of internal device memory. Defaults to `false`.
+    </ParamField>
+
+    <ParamField body="grantPermissions" type="boolean">
+      Set to `true` to automatically grant all permissions declared in the app manifest after installation. Requires Android 6+ (API level 23) and `targetSdkVersion >= 23`. Defaults to `false`.
+    </ParamField>
+
+    <ParamField body="replace" type="boolean">
+      Set to `false` to throw an error instead of upgrading the app if it is already installed. Defaults to `true`.
+    </ParamField>
+
+    <ParamField body="checkVersion" type="boolean">
+      Set to `true` to skip installation if the device already has a version equal to or newer than the one being installed. Helps avoid `INSTALL_FAILED_VERSION_DOWNGRADE` errors.
+    </ParamField>
+  </Accordion>
+</AccordionGroup>
+
+<CodeGroup>
+
+```java Java
+driver.executeScript("mobile: installApp", Map.ofEntries(
+    Map.entry("appPath", "/path/to/app.apk"),
+    Map.entry("timeout", 120000),
+    Map.entry("grantPermissions", true),
+    Map.entry("replace", true)
+));
+```
+
+```python Python
+driver.execute_script('mobile: installApp', {
+    'appPath': '/path/to/app.apk',
+    'timeout': 120000,
+    'grantPermissions': True,
+    'replace': True
+})
+```
+
+```javascript WebdriverIO
+await driver.executeScript('mobile: installApp', [{
+    appPath: '/path/to/app.apk',
+    timeout: 120000,
+    grantPermissions: true,
+    replace: true
+}]);
+```
+
+```ruby Ruby
+@driver.execute_script 'mobile: installApp', {
+    appPath: '/path/to/app.apk',
+    timeout: 120000,
+    grantPermissions: true,
+    replace: true
+}
+```
+
+</CodeGroup>
+
+---
+
+## mobile: removeApp
+
+Removes an installed application from the device. The call is silently ignored if the app is not installed.
+
+<AccordionGroup>
+  <Accordion title="Parameters">
+    <ParamField body="appId" type="string" required>
+      The package identifier of the application to remove (e.g. `com.example.myapp`).
+    </ParamField>
+
+    <ParamField body="timeout" type="number">
+      Milliseconds to wait until the app is uninstalled. Defaults to `20000`.
+    </ParamField>
+
+    <ParamField body="keepData" type="boolean">
+      Set to `true` to keep the application's data and cache directories after uninstall.
+    </ParamField>
+  </Accordion>
+  <Accordion title="Returns">
+    <ResponseField name="result" type="boolean">
+      `true` if the app was found on the device and successfully removed, `false` otherwise.
+    </ResponseField>
+  </Accordion>
+</AccordionGroup>
+
+<CodeGroup>
+
+```java Java
+boolean removed = (boolean) driver.executeScript("mobile: removeApp", Map.ofEntries(
+    Map.entry("appId", "com.example.myapp")
+));
+```
+
+```python Python
+removed = driver.execute_script('mobile: removeApp', {'appId': 'com.example.myapp'})
+```
+
+```javascript WebdriverIO
+const removed = await driver.executeScript('mobile: removeApp', [{ appId: 'com.example.myapp' }]);
+```
+
+```ruby Ruby
+removed = @driver.execute_script 'mobile: removeApp', { appId: 'com.example.myapp' }
+```
+
+</CodeGroup>
+
+---
+
+## mobile: isAppInstalled
+
+Verifies whether an application is installed on the device.
+
+<AccordionGroup>
+  <Accordion title="Parameters">
+    <ParamField body="appId" type="string" required>
+      The package identifier to check (e.g. `com.example.myapp`).
+    </ParamField>
+
+    <ParamField body="user" type="number | string">
+      The user ID for which to check the installation. Defaults to `'current'`.
+    </ParamField>
+  </Accordion>
+  <Accordion title="Returns">
+    <ResponseField name="result" type="boolean">
+      `true` if the app is installed for the given user, `false` otherwise.
+    </ResponseField>
+  </Accordion>
+</AccordionGroup>
+
+<CodeGroup>
+
+```java Java
+boolean installed = (boolean) driver.executeScript("mobile: isAppInstalled", Map.ofEntries(
+    Map.entry("appId", "com.example.myapp")
+));
+```
+
+```python Python
+installed = driver.execute_script('mobile: isAppInstalled', {'appId': 'com.example.myapp'})
+```
+
+```javascript WebdriverIO
+const installed = await driver.executeScript('mobile: isAppInstalled', [{ appId: 'com.example.myapp' }]);
+```
+
+```ruby Ruby
+installed = @driver.execute_script 'mobile: isAppInstalled', { appId: 'com.example.myapp' }
+```
+
+</CodeGroup>
+
+---
+
+## mobile: listApps
+
+Lists all installed packages on the device, optionally filtered by user.
+
+<Warning>
+  This command requires Android API level 26 or higher. An exception is thrown on older devices.
+</Warning>
+
+<AccordionGroup>
+  <Accordion title="Parameters">
+    <ParamField body="user" type="number | string">
+      The user ID to filter installed packages by. Defaults to `'current'`.
+    </ParamField>
+  </Accordion>
+  <Accordion title="Returns">
+    <ResponseField name="result" type="object">
+      A map where keys are package names and values are maps of platform-specific app properties. Available since UiAutomator2 driver v7.0.0.
+    </ResponseField>
+  </Accordion>
+</AccordionGroup>
+
+<CodeGroup>
+
+```java Java
+var apps = driver.executeScript("mobile: listApps", Map.ofEntries());
+```
+
+```python Python
+apps = driver.execute_script('mobile: listApps', {})
+```
+
+```javascript WebdriverIO
+const apps = await driver.executeScript('mobile: listApps', [{}]);
+```
+
+```ruby Ruby
+apps = @driver.execute_script 'mobile: listApps', {}
+```
+
+</CodeGroup>
+
+---
+
+## mobile: queryAppState
+
+Queries the current running state of an application.
+
+<AccordionGroup>
+  <Accordion title="Parameters">
+    <ParamField body="appId" type="string" required>
+      The package identifier of the application to query (e.g. `com.example.myapp`).
+    </ParamField>
+  </Accordion>
+  <Accordion title="Returns">
+    <ResponseField name="result" type="number">
+      One of the following integer values:
+      - `0` — App is not installed
+      - `1` — App is installed but not running
+      - `3` — App is running in the background
+      - `4` — App is running in the foreground
+    </ResponseField>
+  </Accordion>
+</AccordionGroup>
+
+<CodeGroup>
+
+```java Java
+int state = ((Number) driver.executeScript("mobile: queryAppState", Map.ofEntries(
+    Map.entry("appId", "com.example.myapp")
+))).intValue();
+```
+
+```python Python
+state = driver.execute_script('mobile: queryAppState', {'appId': 'com.example.myapp'})
+```
+
+```javascript WebdriverIO
+const state = await driver.executeScript('mobile: queryAppState', [{ appId: 'com.example.myapp' }]);
+```
+
+```ruby Ruby
+state = @driver.execute_script 'mobile: queryAppState', { appId: 'com.example.myapp' }
+```
+
+</CodeGroup>
+
+---
+
+## mobile: activateApp
+
+Activates the given application or launches it if it is not running. Simulates tapping the app icon on the home screen.
+
+<AccordionGroup>
+  <Accordion title="Parameters">
+    <ParamField body="appId" type="string" required>
+      The package identifier of the application to activate (e.g. `com.example.myapp`).
+    </ParamField>
+  </Accordion>
+</AccordionGroup>
+
+<CodeGroup>
+
+```java Java
+driver.executeScript("mobile: activateApp", Map.ofEntries(
+    Map.entry("appId", "com.example.myapp")
+));
+```
+
+```python Python
+driver.execute_script('mobile: activateApp', {'appId': 'com.example.myapp'})
+```
+
+```javascript WebdriverIO
+await driver.executeScript('mobile: activateApp', [{ appId: 'com.example.myapp' }]);
+```
+
+```ruby Ruby
+@driver.execute_script 'mobile: activateApp', { appId: 'com.example.myapp' }
+```
+
+</CodeGroup>
+
+---
+
+## mobile: terminateApp
+
+Terminates a running application and waits until the process has stopped.
+
+<Tip>
+  Set `timeout` to `0` or a negative value (since driver v2.9.0) to terminate the process without waiting to verify that it actually stopped. This is useful when the app may restart itself automatically.
+</Tip>
+
+<AccordionGroup>
+  <Accordion title="Parameters">
+    <ParamField body="appId" type="string" required>
+      The package identifier of the application to terminate (e.g. `com.example.myapp`).
+    </ParamField>
+
+    <ParamField body="timeout" type="number">
+      Milliseconds to wait for the app to terminate. Defaults to `500`.
+    </ParamField>
+  </Accordion>
+  <Accordion title="Returns">
+    <ResponseField name="result" type="boolean">
+      `true` if the app was successfully terminated.
+    </ResponseField>
+  </Accordion>
+</AccordionGroup>
+
+<CodeGroup>
+
+```java Java
+boolean terminated = (boolean) driver.executeScript("mobile: terminateApp", Map.ofEntries(
+    Map.entry("appId", "com.example.myapp"),
+    Map.entry("timeout", 3000)
+));
+```
+
+```python Python
+terminated = driver.execute_script('mobile: terminateApp', {
+    'appId': 'com.example.myapp',
+    'timeout': 3000
+})
+```
+
+```javascript WebdriverIO
+const terminated = await driver.executeScript('mobile: terminateApp', [{
+    appId: 'com.example.myapp',
+    timeout: 3000
+}]);
+```
+
+```ruby Ruby
+terminated = @driver.execute_script 'mobile: terminateApp', {
+    appId: 'com.example.myapp',
+    timeout: 3000
+}
+```
+
+</CodeGroup>
+
+---
+
+## mobile: clearApp
+
+Deletes all data associated with an application package. Calls `adb shell pm clear` under the hood.
+
+<Warning>
+  The app must be accessible, must not be running, and must exist on the device for this command to work.
+</Warning>
+
+<AccordionGroup>
+  <Accordion title="Parameters">
+    <ParamField body="appId" type="string" required>
+      The package identifier of the application whose data should be cleared (e.g. `com.example.myapp`).
+    </ParamField>
+  </Accordion>
+  <Accordion title="Returns">
+    <ResponseField name="result" type="string">
+      The stdout output of the `adb shell pm clear` command.
+    </ResponseField>
+  </Accordion>
+</AccordionGroup>
+
+<CodeGroup>
+
+```java Java
+String output = (String) driver.executeScript("mobile: clearApp", Map.ofEntries(
+    Map.entry("appId", "com.example.myapp")
+));
+```
+
+```python Python
+output = driver.execute_script('mobile: clearApp', {'appId': 'com.example.myapp'})
+```
+
+```javascript WebdriverIO
+const output = await driver.executeScript('mobile: clearApp', [{ appId: 'com.example.myapp' }]);
+```
+
+```ruby Ruby
+output = @driver.execute_script 'mobile: clearApp', { appId: 'com.example.myapp' }
+```
+
+</CodeGroup>
+
+---
+
+## mobile: startActivity
+
+Starts an activity intent using `am start` or `am start-activity` under the hood.
+
+<AccordionGroup>
+  <Accordion title="Parameters">
+    <ParamField body="intent" type="string" required>
+      The full activity intent name, e.g. `com.example.myapp/.MainActivity`.
+    </ParamField>
+
+    <ParamField body="user" type="number | string">
+      The user ID for which to start the activity. Defaults to `'current'`.
+    </ParamField>
+
+    <ParamField body="wait" type="boolean">
+      Set to `true` to block until the Activity Manager returns control to the system.
+    </ParamField>
+
+    <ParamField body="stop" type="boolean">
+      Set to `true` to force-stop the target app before starting the activity.
+    </ParamField>
+
+    <ParamField body="windowingMode" type="integer">
+      The windowing mode constant to launch the activity into. See [WindowConfiguration.java](https://android.googlesource.com/platform/frameworks/base/+/master/core/java/android/app/WindowConfiguration.java) for `WINDOWING_MODE_*` constants.
+    </ParamField>
+
+    <ParamField body="activityType" type="integer">
+      The activity type constant. See [WindowConfiguration.java](https://android.googlesource.com/platform/frameworks/base/+/master/core/java/android/app/WindowConfiguration.java) for `ACTIVITY_TYPE_*` constants.
+    </ParamField>
+
+    <ParamField body="action" type="string">
+      Intent action. Passed as `-a` to the Activity Manager (e.g. `android.intent.action.MAIN`).
+    </ParamField>
+
+    <ParamField body="uri" type="string">
+      Unified resource identifier. Passed as `-d` to the Activity Manager.
+    </ParamField>
+
+    <ParamField body="mimeType" type="string">
+      MIME type. Passed as `-t` to the Activity Manager (e.g. `application/json`).
+    </ParamField>
+
+    <ParamField body="identifier" type="string">
+      Optional identifier. Passed as `-i` to the Activity Manager.
+    </ParamField>
+
+    <ParamField body="categories" type="string | string[]">
+      One or more category names. Passed as `-c` to the Activity Manager (e.g. `android.intent.category.LAUNCHER`).
+    </ParamField>
+
+    <ParamField body="component" type="string">
+      Component name. Passed as `-n` to the Activity Manager (e.g. `com.myapp/com.myapp.SplashActivity`).
+    </ParamField>
+
+    <ParamField body="package" type="string">
+      Package name. Passed as `-p` to the Activity Manager.
+    </ParamField>
+
+    <ParamField body="extras" type="array">
+      Optional intent extras as an array of arrays. Each sub-array contains `[type, key, value]` or `[type, key]` for null types. Supported type codes: `s` (string), `sn` (null), `z` (boolean), `i` (integer), `l` (long), `f` (float), `u` (URI), `cn` (component name), `ia` (int array), `ial` (int list), `la` (long array), `lal` (long list), `fa` (float array), `fal` (float list), `sa` (string array), `sal` (string list).
+    </ParamField>
+
+    <ParamField body="flags" type="string">
+      Intent flags as a hexadecimal string (e.g. `0x10200000`). Multiple flags can be merged with bitwise OR. See [Intent](https://developer.android.com/reference/android/content/Intent.html) for `FLAG_ACTIVITY_*` constants.
+    </ParamField>
+  </Accordion>
+  <Accordion title="Returns">
+    <ResponseField name="result" type="string">
+      The stdout output of the `am` command.
+    </ResponseField>
+  </Accordion>
+</AccordionGroup>
+
+<CodeGroup>
+
+```java Java
+String output = (String) driver.executeScript("mobile: startActivity", Map.ofEntries(
+    Map.entry("intent", "com.example.myapp/.MainActivity"),
+    Map.entry("wait", true),
+    Map.entry("stop", true)
+));
+```
+
+```python Python
+output = driver.execute_script('mobile: startActivity', {
+    'intent': 'com.example.myapp/.MainActivity',
+    'wait': True,
+    'stop': True
+})
+```
+
+```javascript WebdriverIO
+const output = await driver.executeScript('mobile: startActivity', [{
+    intent: 'com.example.myapp/.MainActivity',
+    wait: true,
+    stop: true
+}]);
+```
+
+```ruby Ruby
+output = @driver.execute_script 'mobile: startActivity', {
+    intent: 'com.example.myapp/.MainActivity',
+    wait: true,
+    stop: true,
+    action: 'android.intent.action.MAIN',
+    categories: ['android.intent.category.LAUNCHER'],
+    flags: '0x10200000'
+}
+```
+
+</CodeGroup>
+
+---
+
+## mobile: startService
+
+Starts a service intent using `am startservice` or `am start-service` under the hood.
+
+<AccordionGroup>
+  <Accordion title="Parameters">
+    <ParamField body="intent" type="string">
+      The full service intent name, e.g. `com.example.myapp/.MyService`.
+    </ParamField>
+
+    <ParamField body="foreground" type="boolean">
+      Set to `true` to start the service as a foreground service. Only applies to Android 8 (API 26) and above.
+    </ParamField>
+
+    <ParamField body="user" type="number | string">
+      The user ID for which to start the service. Defaults to `'current'`.
+    </ParamField>
+
+    <ParamField body="action" type="string">
+      Intent action. See [mobile: startActivity](#mobile-startactivity) for details.
+    </ParamField>
+
+    <ParamField body="uri" type="string">
+      Unified resource identifier. See [mobile: startActivity](#mobile-startactivity) for details.
+    </ParamField>
+
+    <ParamField body="mimeType" type="string">
+      MIME type. See [mobile: startActivity](#mobile-startactivity) for details.
+    </ParamField>
+
+    <ParamField body="identifier" type="string">
+      Optional identifier. See [mobile: startActivity](#mobile-startactivity) for details.
+    </ParamField>
+
+    <ParamField body="categories" type="string | string[]">
+      One or more category names. See [mobile: startActivity](#mobile-startactivity) for details.
+    </ParamField>
+
+    <ParamField body="component" type="string">
+      Component name. See [mobile: startActivity](#mobile-startactivity) for details.
+    </ParamField>
+
+    <ParamField body="package" type="string">
+      Package name. See [mobile: startActivity](#mobile-startactivity) for details.
+    </ParamField>
+
+    <ParamField body="extras" type="array">
+      Optional intent extras. See [mobile: startActivity](#mobile-startactivity) for details on format.
+    </ParamField>
+
+    <ParamField body="flags" type="string">
+      Intent flags as a hexadecimal string. See [mobile: startActivity](#mobile-startactivity) for details.
+    </ParamField>
+  </Accordion>
+  <Accordion title="Returns">
+    <ResponseField name="result" type="string">
+      The stdout output of the `am` command.
+    </ResponseField>
+  </Accordion>
+</AccordionGroup>
+
+<CodeGroup>
+
+```java Java
+driver.executeScript("mobile: startService", Map.ofEntries(
+    Map.entry("intent", "com.example.myapp/.MyService"),
+    Map.entry("foreground", false)
+));
+```
+
+```python Python
+driver.execute_script('mobile: startService', {
+    'intent': 'com.example.myapp/.MyService',
+    'foreground': False
+})
+```
+
+```javascript WebdriverIO
+await driver.executeScript('mobile: startService', [{
+    intent: 'com.example.myapp/.MyService',
+    foreground: false
+}]);
+```
+
+```ruby Ruby
+@driver.execute_script 'mobile: startService', {
+    intent: 'com.example.myapp/.MyService',
+    foreground: false
+}
+```
+
+</CodeGroup>
+
+---
+
+## mobile: stopService
+
+Stops a running service intent using `am stopservice` or `am stop-service` under the hood.
+
+<AccordionGroup>
+  <Accordion title="Parameters">
+    <ParamField body="intent" type="string">
+      The full service intent name to stop, e.g. `com.example.myapp/.MyService`.
+    </ParamField>
+
+    <ParamField body="user" type="number | string">
+      The user ID for which to stop the service. Defaults to `'current'`.
+    </ParamField>
+
+    <ParamField body="action" type="string">
+      Intent action. See [mobile: startActivity](#mobile-startactivity) for details.
+    </ParamField>
+
+    <ParamField body="uri" type="string">
+      Unified resource identifier. See [mobile: startActivity](#mobile-startactivity) for details.
+    </ParamField>
+
+    <ParamField body="mimeType" type="string">
+      MIME type. See [mobile: startActivity](#mobile-startactivity) for details.
+    </ParamField>
+
+    <ParamField body="identifier" type="string">
+      Optional identifier. See [mobile: startActivity](#mobile-startactivity) for details.
+    </ParamField>
+
+    <ParamField body="categories" type="string | string[]">
+      Category names. See [mobile: startActivity](#mobile-startactivity) for details.
+    </ParamField>
+
+    <ParamField body="component" type="string">
+      Component name. See [mobile: startActivity](#mobile-startactivity) for details.
+    </ParamField>
+
+    <ParamField body="package" type="string">
+      Package name. See [mobile: startActivity](#mobile-startactivity) for details.
+    </ParamField>
+
+    <ParamField body="extras" type="array">
+      Optional intent extras. See [mobile: startActivity](#mobile-startactivity) for format details.
+    </ParamField>
+
+    <ParamField body="flags" type="string">
+      Intent flags as a hexadecimal string. See [mobile: startActivity](#mobile-startactivity) for details.
+    </ParamField>
+  </Accordion>
+</AccordionGroup>
+
+<CodeGroup>
+
+```java Java
+driver.executeScript("mobile: stopService", Map.ofEntries(
+    Map.entry("intent", "com.example.myapp/.MyService")
+));
+```
+
+```python Python
+driver.execute_script('mobile: stopService', {'intent': 'com.example.myapp/.MyService'})
+```
+
+```javascript WebdriverIO
+await driver.executeScript('mobile: stopService', [{ intent: 'com.example.myapp/.MyService' }]);
+```
+
+```ruby Ruby
+@driver.execute_script 'mobile: stopService', { intent: 'com.example.myapp/.MyService' }
+```
+
+</CodeGroup>
+
+---
+
+## mobile: changePermissions
+
+Grants or revokes runtime permissions for an application package.
+
+<AccordionGroup>
+  <Accordion title="Parameters">
+    <ParamField body="permissions" type="string | string[]" required>
+      The full permission name(s) to change (e.g. `android.permission.ACCESS_FINE_LOCATION`), or the special value `'all'` to apply the action to all permissions requested by the package (only supported when `target` is `pm`). For `appops` targets, use AppOps permission names.
+    </ParamField>
+
+    <ParamField body="appPackage" type="string">
+      The package identifier to change permissions for. Defaults to the app under test.
+    </ParamField>
+
+    <ParamField body="action" type="string">
+      The action to perform. When `target` is `pm`: `'grant'` (default) or `'revoke'`. When `target` is `appops`: `'allow'` (default), `'deny'`, `'ignore'`, or `'default'`.
+    </ParamField>
+
+    <ParamField body="target" type="string">
+      The permission manager to use: `'pm'` (default) or `'appops'` (available since driver v2.11.0). The `appops` target requires the `adb_shell` server security option to be enabled.
+    </ParamField>
+  </Accordion>
+</AccordionGroup>
+
+<CodeGroup>
+
+```java Java
+driver.executeScript("mobile: changePermissions", Map.ofEntries(
+    Map.entry("permissions", "all"),
+    Map.entry("appPackage", "com.example.myapp"),
+    Map.entry("action", "grant")
+));
+```
+
+```python Python
+driver.execute_script('mobile: changePermissions', {
+    'permissions': ['android.permission.ACCESS_FINE_LOCATION', 'android.permission.CAMERA'],
+    'appPackage': 'com.example.myapp',
+    'action': 'grant'
+})
+```
+
+```javascript WebdriverIO
+await driver.executeScript('mobile: changePermissions', [{
+    permissions: 'all',
+    appPackage: 'com.example.myapp',
+    action: 'grant'
+}]);
+```
+
+```ruby Ruby
+@driver.execute_script 'mobile: changePermissions', {
+    permissions: 'all',
+    appPackage: 'com.example.myapp',
+    action: 'grant'
+}
+```
+
+</CodeGroup>
+
+---
+
+## mobile: getPermissions
+
+Retrieves the list of runtime permissions for an application package.
+
+<AccordionGroup>
+  <Accordion title="Parameters">
+    <ParamField body="type" type="string">
+      The category of permissions to retrieve. One of `'denied'`, `'granted'`, or `'requested'`. Defaults to `'requested'`.
+    </ParamField>
+
+    <ParamField body="appPackage" type="string">
+      The package identifier to query. Defaults to the app under test.
+    </ParamField>
+  </Accordion>
+  <Accordion title="Returns">
+    <ResponseField name="result" type="string[]">
+      An array of permission name strings. May be empty if no permissions of the given type exist.
+    </ResponseField>
+  </Accordion>
+</AccordionGroup>
+
+<CodeGroup>
+
+```java Java
+var permissions = driver.executeScript("mobile: getPermissions", Map.ofEntries(
+    Map.entry("type", "granted"),
+    Map.entry("appPackage", "com.example.myapp")
+));
+```
+
+```python Python
+permissions = driver.execute_script('mobile: getPermissions', {
+    'type': 'granted',
+    'appPackage': 'com.example.myapp'
+})
+```
+
+```javascript WebdriverIO
+const permissions = await driver.executeScript('mobile: getPermissions', [{
+    type: 'granted',
+    appPackage: 'com.example.myapp'
+}]);
+```
+
+```ruby Ruby
+permissions = @driver.execute_script 'mobile: getPermissions', {
+    type: 'granted',
+    appPackage: 'com.example.myapp'
+}
+```
+
+</CodeGroup>
+
+---
+
+## mobile: deepLink
+
+Opens a URI that may take users directly to specific content in an app.
+
+<AccordionGroup>
+  <Accordion title="Parameters">
+    <ParamField body="url" type="string" required>
+      The URL to open, e.g. `theapp://login/` or `https://example.com/page`.
+    </ParamField>
+
+    <ParamField body="package" type="string">
+      The package name to open the URL with. Optional since driver v3.9.3.
+    </ParamField>
+
+    <ParamField body="waitForLaunch" type="boolean">
+      Set to `false` to prevent ADB from waiting for the started activity to return control. Defaults to `true`.
+    </ParamField>
+  </Accordion>
+</AccordionGroup>
+
+<CodeGroup>
+
+```java Java
+driver.executeScript("mobile: deepLink", Map.ofEntries(
+    Map.entry("url", "theapp://login/"),
+    Map.entry("package", "com.example.myapp")
+));
+```
+
+```python Python
+driver.execute_script('mobile: deepLink', {
+    'url': 'theapp://login/',
+    'package': 'com.example.myapp'
+})
+```
+
+```javascript WebdriverIO
+await driver.executeScript('mobile: deepLink', [{
+    url: 'theapp://login/',
+    package: 'com.example.myapp'
+}]);
+```
+
+```ruby Ruby
+@driver.execute_script 'mobile: deepLink', {
+    url: 'theapp://login/',
+    package: 'com.example.myapp'
+}
+```
+
+</CodeGroup>
+
+---
+
+## mobile: shell
+
+Executes a shell command on the device via ADB.
+
+<Warning>
+  This command exposes a potential security risk and is only available when the server is started with the `adb_shell` feature flag explicitly enabled.
+</Warning>
+
+<AccordionGroup>
+  <Accordion title="Parameters">
+    <ParamField body="command" type="string" required>
+      The shell command name to execute, e.g. `echo` or `rm`.
+    </ParamField>
+
+    <ParamField body="args" type="string[]">
+      An array of arguments to pass to the command, e.g. `['-f', '/sdcard/myfile.txt']`.
+    </ParamField>
+
+    <ParamField body="timeout" type="number">
+      Milliseconds to wait before throwing a timeout error. Defaults to `20000`.
+    </ParamField>
+
+    <ParamField body="includeStderr" type="boolean">
+      Set to `true` to include the stderr stream in the result. Defaults to `false`.
+    </ParamField>
+  </Accordion>
+  <Accordion title="Returns">
+    <ResponseField name="result" type="string | object">
+      When `includeStderr` is `false`, returns the stdout content as a string. When `includeStderr` is `true`, returns an object with `stdout` and `stderr` string properties. If the command exits with a non-zero code, an exception is thrown with the stderr content as the message.
+    </ResponseField>
+  </Accordion>
+</AccordionGroup>
+
+<CodeGroup>
+
+```java Java
+String output = (String) driver.executeScript("mobile: shell", Map.ofEntries(
+    Map.entry("command", "echo"),
+    Map.entry("args", List.of("hello world"))
+));
+```
+
+```python Python
+output = driver.execute_script('mobile: shell', {
+    'command': 'echo',
+    'args': ['hello world']
+})
+
+# With stderr
+result = driver.execute_script('mobile: shell', {
+    'command': 'cat',
+    'args': ['/sdcard/file.txt'],
+    'includeStderr': True
+})
+print(result['stdout'])
+print(result['stderr'])
+```
+
+```javascript WebdriverIO
+const output = await driver.executeScript('mobile: shell', [{
+    command: 'echo',
+    args: ['hello world']
+}]);
+```
+
+```ruby Ruby
+output = @driver.execute_script 'mobile: shell', {
+    command: 'echo',
+    args: ['hello world']
+}
+```
+
+</CodeGroup>
+
+---
+
+## mobile: installMultipleApks
+
+Installs multiple APKs to the device at once using the `adb install-multiple` option. Useful for split APKs or installing a base APK alongside feature modules. Available since driver version (see [adb documentation](https://developer.android.com/tools/adb#install) for details).
+
+<AccordionGroup>
+  <Accordion title="Parameters">
+    <ParamField body="apks" type="string[]" required>
+      Array of paths to APK files to install. Each path can be a local filesystem path on the server or a remote URL.
+    </ParamField>
+
+    <ParamField body="options" type="object">
+      Installation options:
+      - `grantPermissions` (boolean) — Enable `-g` flag to grant all permissions
+      - `allowTestPackages` (boolean) — Enable `-t` flag to allow test packages
+      - `useSdcard` (boolean) — Enable `-s` flag to install to SD card
+      - `replace` (boolean) — Enable `-r` flag to reinstall. Enabled by default
+      - `partialInstall` (boolean) — Enable `-p` flag for partial application install
+    </ParamField>
+  </Accordion>
+</AccordionGroup>
+
+<CodeGroup>
+
+```java Java
+driver.executeScript("mobile: installMultipleApks", Map.ofEntries(
+    Map.entry("apks", List.of("/path/to/base.apk", "/path/to/feature.apk")),
+    Map.entry("options", Map.of("grantPermissions", true))
+));
+```
+
+```python Python
+driver.execute_script('mobile: installMultipleApks', {
+    'apks': ['/path/to/base.apk', '/path/to/feature.apk'],
+    'options': {'grantPermissions': True, 'replace': True}
+})
+```
+
+```javascript WebdriverIO
+await driver.executeScript('mobile: installMultipleApks', [{
+    apks: ['/path/to/base.apk', '/path/to/feature.apk'],
+    options: { grantPermissions: true }
+}]);
+```
+
+</CodeGroup>
+
+---
+
+## mobile: replaceElementValue
+
+Replaces the text content of an input element with new text, clearing its previous value. Available since driver version 2.22.
+
+<AccordionGroup>
+  <Accordion title="Parameters">
+    <ParamField body="elementId" type="string" required>
+      The hexadecimal identifier of the destination text input element.
+    </ParamField>
+
+    <ParamField body="text" type="string" required>
+      The replacement text. May contain Unicode characters. If the text ends with `\n` (escaped backslash + n, not a newline), an Enter key press is emulated after the text is entered.
+    </ParamField>
+  </Accordion>
+</AccordionGroup>
+
+<CodeGroup>
+
+```java Java
+driver.executeScript("mobile: replaceElementValue", Map.ofEntries(
+    Map.entry("elementId", ((RemoteWebElement) inputField).getId()),
+    Map.entry("text", "new value")
+));
+```
+
+```python Python
+input_field = driver.find_element(AppiumBy.ID, 'com.example:id/input')
+driver.execute_script('mobile: replaceElementValue', {
+    'elementId': input_field.id,
+    'text': 'new value'
+})
+```
+
+```javascript WebdriverIO
+const inputField = await driver.$('~Search');
+await driver.executeScript('mobile: replaceElementValue', [{
+    elementId: inputField.elementId,
+    text: 'new value'
+}]);
+```
+
+</CodeGroup>

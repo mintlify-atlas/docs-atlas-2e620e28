@@ -1,0 +1,1246 @@
+---
+title: "Device Commands"
+description: "Mobile extension commands for device information, notifications, and system interaction"
+---
+
+These commands provide access to device state, system notifications, sensor emulation, and other Android-specific system interactions.
+
+---
+
+## mobile: batteryInfo
+
+Retrieves battery information from the device under test.
+
+<AccordionGroup>
+  <Accordion title="Returns">
+    <ResponseField name="level" type="number">
+      Battery charge level in the range `[0.0, 1.0]`, where `1.0` is 100% charge. Returns `-1` if the value cannot be retrieved.
+    </ResponseField>
+
+    <ResponseField name="state" type="number">
+      Battery state as an integer:
+      - `1` — Unknown
+      - `2` — Charging
+      - `3` — Discharging
+      - `4` — Not charging
+      - `5` — Full
+
+      Returns `-1` if the value cannot be retrieved.
+    </ResponseField>
+  </Accordion>
+</AccordionGroup>
+
+<CodeGroup>
+
+```java Java
+var info = driver.executeScript("mobile: batteryInfo", Map.ofEntries());
+```
+
+```python Python
+info = driver.execute_script('mobile: batteryInfo', {})
+print(info['level'])  # e.g. 0.85
+print(info['state'])  # e.g. 2 (charging)
+```
+
+```javascript WebdriverIO
+const info = await driver.executeScript('mobile: batteryInfo', [{}]);
+console.log(info.level); // e.g. 0.85
+```
+
+```ruby Ruby
+info = @driver.execute_script 'mobile: batteryInfo', {}
+```
+
+</CodeGroup>
+
+---
+
+## mobile: deviceInfo
+
+Retrieves information about the device under test, including model, serial number, network connectivity, and more.
+
+<AccordionGroup>
+  <Accordion title="Returns">
+    <ResponseField name="result" type="object">
+      A dictionary of device properties. The full list of keys and values is defined in the [UiAutomator2 server source](https://github.com/appium/appium-uiautomator2-server/blob/master/app/src/main/java/io/appium/uiautomator2/handler/GetDeviceInfo.java).
+    </ResponseField>
+  </Accordion>
+</AccordionGroup>
+
+<CodeGroup>
+
+```java Java
+var info = driver.executeScript("mobile: deviceInfo", Map.ofEntries());
+```
+
+```python Python
+info = driver.execute_script('mobile: deviceInfo', {})
+```
+
+```javascript WebdriverIO
+const info = await driver.executeScript('mobile: deviceInfo', [{}]);
+```
+
+```ruby Ruby
+info = @driver.execute_script 'mobile: deviceInfo', {}
+```
+
+</CodeGroup>
+
+---
+
+## mobile: getDeviceTime
+
+Retrieves the current timestamp from the device under test.
+
+<AccordionGroup>
+  <Accordion title="Parameters">
+    <ParamField body="format" type="string">
+      A [Moment.js format string](https://momentjs.com/docs/) defining the output format. Defaults to `'YYYY-MM-DDTHH:mm:ssZ'` (ISO 8601).
+    </ParamField>
+  </Accordion>
+  <Accordion title="Returns">
+    <ResponseField name="result" type="string">
+      The device timestamp formatted according to the given format string.
+    </ResponseField>
+  </Accordion>
+</AccordionGroup>
+
+<CodeGroup>
+
+```java Java
+String time = (String) driver.executeScript("mobile: getDeviceTime", Map.ofEntries(
+    Map.entry("format", "YYYY-MM-DDTHH:mm:ssZ")
+));
+```
+
+```python Python
+time = driver.execute_script('mobile: getDeviceTime', {'format': 'YYYY-MM-DD'})
+```
+
+```javascript WebdriverIO
+const time = await driver.executeScript('mobile: getDeviceTime', [{ format: 'YYYY-MM-DDTHH:mm:ssZ' }]);
+```
+
+```ruby Ruby
+time = @driver.execute_script 'mobile: getDeviceTime', { format: 'YYYY-MM-DDTHH:mm:ssZ' }
+```
+
+</CodeGroup>
+
+---
+
+## mobile: getNotifications
+
+Retrieves Android notifications via the Appium Settings helper app.
+
+<Warning>
+  The Appium Settings app must be manually granted notification access under device Settings before this command will return results. Some vendors place this setting in the Privacy menu rather than the standard Apps menu.
+</Warning>
+
+<Note>
+  Appium Settings keeps up to 100 notifications in its internal buffer (active + historical). Newly arrived notifications are added to the head of the array. The `isRemoved` flag is set to `true` for dismissed notifications.
+</Note>
+
+<AccordionGroup>
+  <Accordion title="Returns">
+    <ResponseField name="statusBarNotifications" type="array">
+      An array of notification objects. Each object contains:
+
+      <Expandable title="Notification object properties">
+        <ResponseField name="isGroup" type="boolean">Whether this notification is a group notification.</ResponseField>
+        <ResponseField name="packageName" type="string">Package name of the app that posted the notification.</ResponseField>
+        <ResponseField name="isClearable" type="boolean">Whether the notification can be dismissed by the user.</ResponseField>
+        <ResponseField name="isOngoing" type="boolean">Whether this is an ongoing notification.</ResponseField>
+        <ResponseField name="id" type="number">Notification ID.</ResponseField>
+        <ResponseField name="tag" type="string | null">Notification tag.</ResponseField>
+        <ResponseField name="isRemoved" type="boolean">Whether the notification has been dismissed.</ResponseField>
+        <ResponseField name="userHandle" type="number">User handle associated with the notification.</ResponseField>
+        <ResponseField name="groupKey" type="string">Notification group key.</ResponseField>
+        <ResponseField name="postTime" type="number">Timestamp when the notification was posted (milliseconds since epoch).</ResponseField>
+        <ResponseField name="notification" type="object">
+          Notification content:
+          <Expandable title="notification content fields">
+            <ResponseField name="title" type="string | null">Notification title.</ResponseField>
+            <ResponseField name="bigTitle" type="string | null">Expanded notification title.</ResponseField>
+            <ResponseField name="text" type="string | null">Notification body text.</ResponseField>
+            <ResponseField name="bigText" type="string | null">Expanded notification body text.</ResponseField>
+            <ResponseField name="tickerText" type="string | null">Ticker text shown in the status bar.</ResponseField>
+            <ResponseField name="subText" type="string | null">Sub-text shown below the content.</ResponseField>
+            <ResponseField name="infoText" type="string | null">Informational text.</ResponseField>
+            <ResponseField name="template" type="string">Notification style template class name.</ResponseField>
+          </Expandable>
+        </ResponseField>
+      </Expandable>
+    </ResponseField>
+  </Accordion>
+</AccordionGroup>
+
+<CodeGroup>
+
+```java Java
+var result = driver.executeScript("mobile: getNotifications", Map.ofEntries());
+```
+
+```python Python
+result = driver.execute_script('mobile: getNotifications', {})
+for notif in result['statusBarNotifications']:
+    print(notif['packageName'], notif['notification']['bigTitle'])
+```
+
+```javascript WebdriverIO
+const result = await driver.executeScript('mobile: getNotifications', [{}]);
+result.statusBarNotifications.forEach(n => console.log(n.packageName));
+```
+
+```ruby Ruby
+result = @driver.execute_script 'mobile: getNotifications', {}
+```
+
+</CodeGroup>
+
+---
+
+## mobile: openNotifications
+
+Opens the notifications drawer on the device. Does nothing if the drawer is already open.
+
+<Note>
+  Available since UiAutomator2 driver v2.23.
+</Note>
+
+<CodeGroup>
+
+```java Java
+driver.executeScript("mobile: openNotifications", Map.ofEntries());
+```
+
+```python Python
+driver.execute_script('mobile: openNotifications', {})
+```
+
+```javascript WebdriverIO
+await driver.executeScript('mobile: openNotifications', [{}]);
+```
+
+```ruby Ruby
+@driver.execute_script 'mobile: openNotifications', {}
+```
+
+</CodeGroup>
+
+---
+
+## mobile: listSms
+
+Retrieves recent SMS messages from the device via the Appium Settings helper. Messages are sorted by date in descending order.
+
+<AccordionGroup>
+  <Accordion title="Parameters">
+    <ParamField body="max" type="number">
+      The maximum number of recent messages to retrieve. Defaults to `100`.
+    </ParamField>
+  </Accordion>
+  <Accordion title="Returns">
+    <ResponseField name="items" type="array">
+      An array of SMS message objects, each containing:
+
+      <Expandable title="SMS message properties">
+        <ResponseField name="id" type="string">Message ID.</ResponseField>
+        <ResponseField name="address" type="string">Sender phone number.</ResponseField>
+        <ResponseField name="person" type="string | null">Contact name, if resolved.</ResponseField>
+        <ResponseField name="date" type="string">Message timestamp in milliseconds since epoch.</ResponseField>
+        <ResponseField name="read" type="string">`"1"` if the message has been read, `"0"` otherwise.</ResponseField>
+        <ResponseField name="status" type="string">Message status code.</ResponseField>
+        <ResponseField name="type" type="string">Message type code.</ResponseField>
+        <ResponseField name="subject" type="string | null">Message subject.</ResponseField>
+        <ResponseField name="body" type="string">Message body text.</ResponseField>
+        <ResponseField name="serviceCenter" type="string | null">SMS service center address.</ResponseField>
+      </Expandable>
+    </ResponseField>
+
+    <ResponseField name="total" type="number">
+      Total number of messages returned.
+    </ResponseField>
+  </Accordion>
+</AccordionGroup>
+
+<CodeGroup>
+
+```java Java
+var result = driver.executeScript("mobile: listSms", Map.ofEntries(
+    Map.entry("max", 10)
+));
+```
+
+```python Python
+result = driver.execute_script('mobile: listSms', {'max': 10})
+for sms in result['items']:
+    print(sms['address'], sms['body'])
+```
+
+```javascript WebdriverIO
+const result = await driver.executeScript('mobile: listSms', [{ max: 10 }]);
+```
+
+```ruby Ruby
+result = @driver.execute_script 'mobile: listSms', { max: 10 }
+```
+
+</CodeGroup>
+
+---
+
+## mobile: acceptAlert
+
+Accepts an Android alert by tapping its confirmation button.
+
+<Warning>
+  Alert interaction may not always be reliable, as there is no single standard for how Android alerts are represented in the Accessibility tree.
+</Warning>
+
+<AccordionGroup>
+  <Accordion title="Parameters">
+    <ParamField body="buttonLabel" type="string">
+      The text of the button to tap in order to accept the alert. If not provided, the driver attempts to auto-detect the appropriate button.
+    </ParamField>
+  </Accordion>
+</AccordionGroup>
+
+<CodeGroup>
+
+```java Java
+driver.executeScript("mobile: acceptAlert", Map.ofEntries(
+    Map.entry("buttonLabel", "OK")
+));
+```
+
+```python Python
+driver.execute_script('mobile: acceptAlert', {'buttonLabel': 'OK'})
+```
+
+```javascript WebdriverIO
+await driver.executeScript('mobile: acceptAlert', [{ buttonLabel: 'OK' }]);
+```
+
+```ruby Ruby
+@driver.execute_script 'mobile: acceptAlert', { buttonLabel: 'OK' }
+```
+
+</CodeGroup>
+
+---
+
+## mobile: dismissAlert
+
+Dismisses an Android alert by tapping its dismissal button.
+
+<Warning>
+  Alert interaction may not always be reliable, as there is no single standard for how Android alerts are represented in the Accessibility tree.
+</Warning>
+
+<AccordionGroup>
+  <Accordion title="Parameters">
+    <ParamField body="buttonLabel" type="string">
+      The text of the button to tap in order to dismiss the alert. If not provided, the driver attempts to auto-detect the appropriate button.
+    </ParamField>
+  </Accordion>
+</AccordionGroup>
+
+<CodeGroup>
+
+```java Java
+driver.executeScript("mobile: dismissAlert", Map.ofEntries(
+    Map.entry("buttonLabel", "Cancel")
+));
+```
+
+```python Python
+driver.execute_script('mobile: dismissAlert', {'buttonLabel': 'Cancel'})
+```
+
+```javascript WebdriverIO
+await driver.executeScript('mobile: dismissAlert', [{ buttonLabel: 'Cancel' }]);
+```
+
+```ruby Ruby
+@driver.execute_script 'mobile: dismissAlert', { buttonLabel: 'Cancel' }
+```
+
+</CodeGroup>
+
+---
+
+## mobile: deviceidle
+
+Wraps the `adb shell dumpsys deviceidle` interface for managing Android Doze mode whitelists.
+
+<Note>
+  This command is only available on Android 6 (API 23) and above. See [Diving Into Android M Doze](https://www.protechtraining.com/blog/post/diving-into-android-m-doze-875) for background context.
+</Note>
+
+<AccordionGroup>
+  <Accordion title="Parameters">
+    <ParamField body="action" type="string" required>
+      The action to perform. Accepted values: `'whitelistAdd'` or `'whitelistRemove'`.
+    </ParamField>
+
+    <ParamField body="packages" type="string | string[]" required>
+      One or more package names to apply the action to (e.g. `'com.example.myapp'`).
+    </ParamField>
+  </Accordion>
+</AccordionGroup>
+
+<CodeGroup>
+
+```java Java
+driver.executeScript("mobile: deviceidle", Map.ofEntries(
+    Map.entry("action", "whitelistAdd"),
+    Map.entry("packages", "com.example.myapp")
+));
+```
+
+```python Python
+driver.execute_script('mobile: deviceidle', {
+    'action': 'whitelistAdd',
+    'packages': ['com.example.myapp', 'com.example.other']
+})
+```
+
+```javascript WebdriverIO
+await driver.executeScript('mobile: deviceidle', [{
+    action: 'whitelistAdd',
+    packages: 'com.example.myapp'
+}]);
+```
+
+```ruby Ruby
+@driver.execute_script 'mobile: deviceidle', {
+    action: 'whitelistAdd',
+    packages: 'com.example.myapp'
+}
+```
+
+</CodeGroup>
+
+---
+
+## mobile: resetAccessibilityCache
+
+Resets the accessibility service cache on the device. Useful when the cache becomes stale and element lookups return incorrect or outdated results.
+
+<Note>
+  The driver also resets the cache automatically before element lookups and page source retrieval. Call this command manually only when working with highly dynamic UIs that cause stale reference errors. Note that it also waits for the app to become idle, which may slow down automation if called frequently.
+</Note>
+
+<CodeGroup>
+
+```java Java
+driver.executeScript("mobile: resetAccessibilityCache", Map.ofEntries());
+```
+
+```python Python
+driver.execute_script('mobile: resetAccessibilityCache', {})
+```
+
+```javascript WebdriverIO
+await driver.executeScript('mobile: resetAccessibilityCache', [{}]);
+```
+
+```ruby Ruby
+@driver.execute_script 'mobile: resetAccessibilityCache', {}
+```
+
+</CodeGroup>
+
+---
+
+## mobile: listWindows
+
+Retrieves a list of windows across all displays. Uses `getWindowsOnAllDisplays()` on Android API 30+ and `getWindows()` on older versions (which only returns windows from the default display).
+
+<AccordionGroup>
+  <Accordion title="Parameters">
+    <ParamField body="filters" type="object">
+      An optional object of filter criteria. All filters are applied with AND logic. Supported keys:
+
+      <Expandable title="Filter properties">
+        <ParamField body="packageName" type="string">Package name pattern with glob support (e.g. `com.example.*`).</ParamField>
+        <ParamField body="windowId" type="number">Window identifier.</ParamField>
+        <ParamField body="displayId" type="number">Display identifier.</ParamField>
+        <ParamField body="physicalDisplayId" type="string">Physical display identifier (as string to avoid JavaScript precision issues).</ParamField>
+        <ParamField body="type" type="number">Window type constant. See [AccessibilityWindowInfo.TYPE_*](https://developer.android.com/reference/android/view/accessibility/AccessibilityWindowInfo#TYPE_APPLICATION).</ParamField>
+        <ParamField body="title" type="string">Window title pattern with glob support.</ParamField>
+        <ParamField body="layer" type="number">Z-order layer value.</ParamField>
+        <ParamField body="isAccessibilityFocused" type="boolean">Whether the window has accessibility focus.</ParamField>
+        <ParamField body="isActive" type="boolean">Whether the window is active.</ParamField>
+        <ParamField body="isFocused" type="boolean">Whether the window has input focus.</ParamField>
+        <ParamField body="isInPictureInPictureMode" type="boolean">Whether the window is in picture-in-picture mode.</ParamField>
+      </Expandable>
+    </ParamField>
+
+    <ParamField body="skipScreenshots" type="boolean">
+      Set to `true` to skip capturing screenshots for each window. Improves performance. Screenshots are only available on Android API 34+ even when this is `false`. Defaults to `false`.
+    </ParamField>
+  </Accordion>
+  <Accordion title="Returns">
+    <ResponseField name="result" type="array">
+      An array of window information objects. Each object contains:
+
+      <Expandable title="Window object properties">
+        <ResponseField name="windowId" type="number | null">Window identifier.</ResponseField>
+        <ResponseField name="displayId" type="number">Display identifier.</ResponseField>
+        <ResponseField name="physicalDisplayId" type="string | null">Physical display identifier as a string.</ResponseField>
+        <ResponseField name="virtualDisplayId" type="string | null">Virtual display identifier; only set for virtual displays.</ResponseField>
+        <ResponseField name="rect" type="object">Window bounds with `left`, `top`, `right`, `bottom` properties.</ResponseField>
+        <ResponseField name="packageName" type="string | null">Package name of the owning application.</ResponseField>
+        <ResponseField name="screenshot" type="string | null">Base64-encoded PNG screenshot of the window. Only available on Android API 34+.</ResponseField>
+        <ResponseField name="type" type="number">Window type constant.</ResponseField>
+        <ResponseField name="title" type="string | null">Window title.</ResponseField>
+        <ResponseField name="layer" type="number">Z-order layer; higher values are drawn on top.</ResponseField>
+        <ResponseField name="isAccessibilityFocused" type="boolean">Whether the window has accessibility focus.</ResponseField>
+        <ResponseField name="isActive" type="boolean">Whether the window is active.</ResponseField>
+        <ResponseField name="isFocused" type="boolean">Whether the window has input focus.</ResponseField>
+        <ResponseField name="isInPictureInPictureMode" type="boolean">Whether the window is in picture-in-picture mode.</ResponseField>
+      </Expandable>
+    </ResponseField>
+  </Accordion>
+</AccordionGroup>
+
+<CodeGroup>
+
+```java Java
+var windows = driver.executeScript("mobile: listWindows", Map.ofEntries(
+    Map.entry("filters", Map.ofEntries(Map.entry("packageName", "com.example.myapp"))),
+    Map.entry("skipScreenshots", true)
+));
+```
+
+```python Python
+windows = driver.execute_script('mobile: listWindows', {
+    'filters': {'packageName': 'com.example.myapp'},
+    'skipScreenshots': True
+})
+```
+
+```javascript WebdriverIO
+const windows = await driver.executeScript('mobile: listWindows', [{
+    filters: { packageName: 'com.example.myapp' },
+    skipScreenshots: true
+}]);
+```
+
+```ruby Ruby
+windows = @driver.execute_script 'mobile: listWindows', {
+    filters: { packageName: 'com.example.myapp' },
+    skipScreenshots: true
+}
+```
+
+</CodeGroup>
+
+---
+
+## mobile: listDisplays
+
+Retrieves information about all displays connected to the device.
+
+<AccordionGroup>
+  <Accordion title="Returns">
+    <ResponseField name="result" type="array">
+      An array of display information objects. Each object contains:
+
+      <Expandable title="Display object properties">
+        <ResponseField name="id" type="number">Logical display ID. Used by the `currentDisplayId` setting.</ResponseField>
+        <ResponseField name="name" type="string | null">Display name.</ResponseField>
+        <ResponseField name="physicalId" type="string | null">Physical display identifier as a string. Used by `mobile: screenshots`.</ResponseField>
+        <ResponseField name="virtualId" type="string | null">Virtual display identifier; only set for virtual displays.</ResponseField>
+        <ResponseField name="isDefault" type="boolean">Whether this is the default display.</ResponseField>
+        <ResponseField name="metrics" type="object">
+          Display metrics:
+          <Expandable title="metrics properties">
+            <ResponseField name="widthPixels" type="number">Width in pixels.</ResponseField>
+            <ResponseField name="heightPixels" type="number">Height in pixels.</ResponseField>
+            <ResponseField name="density" type="number">Logical density scaling factor.</ResponseField>
+            <ResponseField name="densityDpi" type="number">Density in dots per inch.</ResponseField>
+            <ResponseField name="scaledDensity" type="number">Font scaling density factor.</ResponseField>
+            <ResponseField name="xdpi" type="number">Physical pixels per inch in the X dimension.</ResponseField>
+            <ResponseField name="ydpi" type="number">Physical pixels per inch in the Y dimension.</ResponseField>
+          </Expandable>
+        </ResponseField>
+      </Expandable>
+    </ResponseField>
+  </Accordion>
+</AccordionGroup>
+
+<CodeGroup>
+
+```java Java
+var displays = driver.executeScript("mobile: listDisplays", Map.ofEntries());
+```
+
+```python Python
+displays = driver.execute_script('mobile: listDisplays', {})
+for display in displays:
+    print(f"Display {display['id']}: {display['metrics']['widthPixels']}x{display['metrics']['heightPixels']}")
+```
+
+```javascript WebdriverIO
+const displays = await driver.executeScript('mobile: listDisplays', [{}]);
+displays.forEach(d => console.log(`${d.id}: ${d.metrics.widthPixels}x${d.metrics.heightPixels}`));
+```
+
+```ruby Ruby
+displays = @driver.execute_script 'mobile: listDisplays', {}
+```
+
+</CodeGroup>
+
+---
+
+## mobile: type
+
+Types Unicode text into the currently focused input field, emulating true keyboard input. Unlike `sendKeys`, this method properly handles Unicode characters and simulates key-by-key entry as if typed from an on-screen keyboard.
+
+<AccordionGroup>
+  <Accordion title="Parameters">
+    <ParamField body="text" type="string" required>
+      The text to type into the focused element.
+    </ParamField>
+  </Accordion>
+</AccordionGroup>
+
+<CodeGroup>
+
+```java Java
+driver.executeScript("mobile: type", Map.ofEntries(
+    Map.entry("text", "Hello, 世界!")
+));
+```
+
+```python Python
+driver.execute_script('mobile: type', {'text': 'Hello, 世界!'})
+```
+
+```javascript WebdriverIO
+await driver.executeScript('mobile: type', [{ text: 'Hello, 世界!' }]);
+```
+
+```ruby Ruby
+@driver.execute_script 'mobile: type', { text: 'Hello, 世界!' }
+```
+
+</CodeGroup>
+
+---
+
+## mobile: performEditorAction
+
+Performs an IME (Input Method Editor) action on the currently focused input element. Emulates pressing action buttons on the on-screen keyboard such as Search, Done, or Next.
+
+<AccordionGroup>
+  <Accordion title="Parameters">
+    <ParamField body="action" type="string" required>
+      The editor action name or integer code. Supported names: `'normal'`, `'unspecified'`, `'none'`, `'go'`, `'search'`, `'send'`, `'next'`, `'done'`, `'previous'`. See [EditorInfo](https://developer.android.com/reference/android/view/inputmethod/EditorInfo) for details.
+    </ParamField>
+  </Accordion>
+</AccordionGroup>
+
+<CodeGroup>
+
+```java Java
+driver.executeScript("mobile: performEditorAction", Map.ofEntries(
+    Map.entry("action", "search")
+));
+```
+
+```python Python
+driver.execute_script('mobile: performEditorAction', {'action': 'search'})
+```
+
+```javascript WebdriverIO
+await driver.executeScript('mobile: performEditorAction', [{ action: 'search' }]);
+```
+
+```ruby Ruby
+@driver.execute_script 'mobile: performEditorAction', { action: 'search' }
+```
+
+</CodeGroup>
+
+---
+
+## mobile: startLogsBroadcast
+
+Starts an Android logcat broadcast over WebSocket at the endpoint `/ws/session/:sessionId:/appium/device/logcat`. Returns immediately if a broadcast is already active. Each connected WebSocket listener receives logcat lines in real time.
+
+<Tip>
+  Consider using [BiDi log events](https://github.com/appium/appium-uiautomator2-driver/blob/master/docs/bidi.md#logentryadded) as a more modern alternative to this WebSocket broadcast.
+</Tip>
+
+<CodeGroup>
+
+```java Java
+driver.executeScript("mobile: startLogsBroadcast", Map.ofEntries());
+```
+
+```python Python
+driver.execute_script('mobile: startLogsBroadcast', {})
+```
+
+```javascript WebdriverIO
+await driver.executeScript('mobile: startLogsBroadcast', [{}]);
+```
+
+```ruby Ruby
+@driver.execute_script 'mobile: startLogsBroadcast', {}
+```
+
+</CodeGroup>
+
+---
+
+## mobile: stopLogsBroadcast
+
+Stops the previously started logcat WebSocket broadcast. Returns immediately if no broadcast is running.
+
+<CodeGroup>
+
+```java Java
+driver.executeScript("mobile: stopLogsBroadcast", Map.ofEntries());
+```
+
+```python Python
+driver.execute_script('mobile: stopLogsBroadcast', {})
+```
+
+```javascript WebdriverIO
+await driver.executeScript('mobile: stopLogsBroadcast', [{}]);
+```
+
+```ruby Ruby
+@driver.execute_script 'mobile: stopLogsBroadcast', {}
+```
+
+</CodeGroup>
+
+---
+
+## mobile: sensorSet
+
+Emulates a change in sensor values on a connected Android emulator.
+
+<Warning>
+  This command does not work on real physical devices.
+</Warning>
+
+<AccordionGroup>
+  <Accordion title="Parameters">
+    <ParamField body="sensorType" type="string" required>
+      The sensor type to emulate (e.g. `'light'`, `'accelerometer'`). The full list of supported sensor types is available in [adb-emu-commands.js](https://github.com/appium/appium-adb/blob/master/lib/tools/adb-emu-commands.js). Run `sensor status` in the emulator console for available types.
+    </ParamField>
+
+    <ParamField body="value" type="string" required>
+      The value to set for the sensor. Run `sensor get <sensorType>` in the emulator console to see the expected value format.
+    </ParamField>
+  </Accordion>
+</AccordionGroup>
+
+<CodeGroup>
+
+```java Java
+driver.executeScript("mobile: sensorSet", Map.ofEntries(
+    Map.entry("sensorType", "light"),
+    Map.entry("value", "50")
+));
+```
+
+```python Python
+driver.execute_script('mobile: sensorSet', {
+    'sensorType': 'light',
+    'value': '50'
+})
+```
+
+```javascript WebdriverIO
+await driver.executeScript('mobile: sensorSet', [{
+    sensorType: 'light',
+    value: '50'
+}]);
+```
+
+```ruby Ruby
+@driver.execute_script 'mobile: sensorSet', {
+    sensorType: 'light',
+    value: '50'
+}
+```
+
+</CodeGroup>
+
+---
+
+## mobile: execEmuConsoleCommand
+
+Executes a command through the Android Emulator's telnet console interface.
+
+<Warning>
+  The `emulator_console` server feature must be enabled for this command to be available.
+</Warning>
+
+<AccordionGroup>
+  <Accordion title="Parameters">
+    <ParamField body="command" type="string" required>
+      The console command to execute. See the [Android Emulator Console Guide](https://developer.android.com/studio/run/emulator-console) for available commands (e.g. `'help-verbose'`, `'geo fix'`).
+    </ParamField>
+
+    <ParamField body="execTimeout" type="number">
+      Milliseconds to wait for the server to reply to the command. Defaults to `60000`.
+    </ParamField>
+
+    <ParamField body="connTimeout" type="number">
+      Console connection timeout in milliseconds. Defaults to `5000`.
+    </ParamField>
+
+    <ParamField body="initTimeout" type="number">
+      Telnet console initialization timeout in milliseconds (time between connection and the command prompt appearing). Defaults to `5000`.
+    </ParamField>
+  </Accordion>
+  <Accordion title="Returns">
+    <ResponseField name="result" type="string">
+      The output of the executed command. An error is thrown if execution fails.
+    </ResponseField>
+  </Accordion>
+</AccordionGroup>
+
+<CodeGroup>
+
+```java Java
+String output = (String) driver.executeScript("mobile: execEmuConsoleCommand", Map.ofEntries(
+    Map.entry("command", "help-verbose")
+));
+```
+
+```python Python
+output = driver.execute_script('mobile: execEmuConsoleCommand', {
+    'command': 'help-verbose',
+    'execTimeout': 60000
+})
+```
+
+```javascript WebdriverIO
+const output = await driver.executeScript('mobile: execEmuConsoleCommand', [{
+    command: 'help-verbose'
+}]);
+```
+
+```ruby Ruby
+output = @driver.execute_script 'mobile: execEmuConsoleCommand', {
+    command: 'help-verbose'
+}
+```
+
+</CodeGroup>
+
+---
+
+## mobile: pressKey
+
+Emulates a single key press using an Android key code. Available since driver version 2.17.0.
+
+<AccordionGroup>
+  <Accordion title="Parameters">
+    <ParamField body="keycode" type="number" required>
+      A valid Android key code. See [KeyEvent documentation](https://developer.android.com/reference/android/view/KeyEvent) for the full list.
+    </ParamField>
+
+    <ParamField body="metastate" type="number">
+      An integer where each bit represents a pressed meta key (Shift, Alt, etc.). See [KeyEvent documentation](https://developer.android.com/reference/android/view/KeyEvent) for details.
+    </ParamField>
+
+    <ParamField body="flags" type="number">
+      Flags for the key event. See [KeyEvent documentation](https://developer.android.com/reference/android/view/KeyEvent) for details.
+    </ParamField>
+
+    <ParamField body="isLongPress" type="boolean">
+      Whether to emulate a long key press. Defaults to `false`.
+    </ParamField>
+
+    <ParamField body="source" type="number">
+      Input device source. One or more [InputDevice.SOURCE_*](https://developer.android.com/reference/android/view/InputDevice) values. Default is `257` (SOURCE_KEYBOARD). Multiple values can be combined with the logical OR operator.
+    </ParamField>
+  </Accordion>
+</AccordionGroup>
+
+<CodeGroup>
+
+```java Java
+// Press Enter key (keycode 66)
+driver.executeScript("mobile: pressKey", Map.ofEntries(
+    Map.entry("keycode", 66)
+));
+
+// Long press Back key (keycode 4)
+driver.executeScript("mobile: pressKey", Map.ofEntries(
+    Map.entry("keycode", 4),
+    Map.entry("isLongPress", true)
+));
+```
+
+```python Python
+# Press Enter
+driver.execute_script('mobile: pressKey', {'keycode': 66})
+
+# Long press Back
+driver.execute_script('mobile: pressKey', {'keycode': 4, 'isLongPress': True})
+```
+
+```javascript WebdriverIO
+// Press Enter
+await driver.executeScript('mobile: pressKey', [{ keycode: 66 }]);
+```
+
+</CodeGroup>
+
+---
+
+## mobile: getClipboard
+
+Retrieves the plaintext content of the device clipboard. Available since driver version 3.7.
+
+<AccordionGroup>
+  <Accordion title="Returns">
+    <ResponseField name="result" type="string">
+      Base64-encoded clipboard content, or an empty string if the clipboard is empty.
+    </ResponseField>
+  </Accordion>
+</AccordionGroup>
+
+<CodeGroup>
+
+```python Python
+import base64
+
+result = driver.execute_script('mobile: getClipboard')
+if result:
+    text = base64.b64decode(result).decode('utf-8')
+    print(text)
+```
+
+```java Java
+String b64 = (String) driver.executeScript("mobile: getClipboard", Map.ofEntries());
+```
+
+```javascript WebdriverIO
+const b64 = await driver.executeScript('mobile: getClipboard', [{}]);
+const text = Buffer.from(b64, 'base64').toString('utf-8');
+```
+
+</CodeGroup>
+
+---
+
+## mobile: setClipboard
+
+Sets the plain text content of the device clipboard. Available since driver version 3.7.
+
+<AccordionGroup>
+  <Accordion title="Parameters">
+    <ParamField body="content" type="string" required>
+      Base64-encoded clipboard payload to set.
+    </ParamField>
+
+    <ParamField body="contentType" type="string">
+      The only supported value is `plaintext`. Defaults to `plaintext`.
+    </ParamField>
+
+    <ParamField body="label" type="string">
+      Optional label to identify the clipboard payload.
+    </ParamField>
+  </Accordion>
+</AccordionGroup>
+
+<CodeGroup>
+
+```python Python
+import base64
+
+text = 'Hello from Appium'
+payload = base64.b64encode(text.encode('utf-8')).decode('utf-8')
+driver.execute_script('mobile: setClipboard', {'content': payload})
+```
+
+```java Java
+String payload = Base64.getEncoder().encodeToString("Hello from Appium".getBytes());
+driver.executeScript("mobile: setClipboard", Map.ofEntries(
+    Map.entry("content", payload)
+));
+```
+
+```javascript WebdriverIO
+const payload = Buffer.from('Hello from Appium').toString('base64');
+await driver.executeScript('mobile: setClipboard', [{ content: payload }]);
+```
+
+</CodeGroup>
+
+---
+
+## mobile: screenshots
+
+Retrieves a screenshot of each display available to Android. Only supported since Android 10.
+
+<Note>
+  This command uses **physical or virtual display IDs**, which differ from the logical display IDs used by the `currentDisplayId` setting. Obtain display IDs from `mobile: listDisplays` (`physicalId` or `virtualId` fields) or `mobile: listWindows` (`physicalDisplayId` or `virtualDisplayId` fields).
+</Note>
+
+<AccordionGroup>
+  <Accordion title="Parameters">
+    <ParamField body="displayId" type="number | string">
+      The physical or virtual display identifier to screenshot. If not provided, screenshots of all displays are returned. Throws an error if the given ID is not found.
+    </ParamField>
+  </Accordion>
+
+  <Accordion title="Returns">
+    A dictionary where each key is the display identifier (string) and each value contains:
+    <ResponseField name="id" type="string">Physical or virtual display identifier.</ResponseField>
+    <ResponseField name="name" type="string">Display name.</ResponseField>
+    <ResponseField name="isDefault" type="boolean">Whether this is the default display.</ResponseField>
+    <ResponseField name="payload" type="string">Base64-encoded PNG screenshot.</ResponseField>
+  </Accordion>
+</AccordionGroup>
+
+<CodeGroup>
+
+```python Python
+# Screenshot all displays
+screenshots = driver.execute_script('mobile: screenshots')
+for display_id, info in screenshots.items():
+    print(f"Display {display_id}: {info['name']}, default={info['isDefault']}")
+
+# Screenshot a specific physical display
+displays = driver.execute_script('mobile: listDisplays')
+physical_id = next(d['physicalId'] for d in displays if d['isDefault'])
+result = driver.execute_script('mobile: screenshots', {'displayId': physical_id})
+```
+
+```java Java
+var screenshots = driver.executeScript("mobile: screenshots", Map.ofEntries());
+```
+
+```javascript WebdriverIO
+const screenshots = await driver.executeScript('mobile: screenshots', [{}]);
+```
+
+</CodeGroup>
+
+---
+
+## mobile: lock
+
+Locks the device screen, optionally unlocking it after a specified number of seconds.
+
+<AccordionGroup>
+  <Accordion title="Parameters">
+    <ParamField body="seconds" type="number | string">
+      Number of seconds after which to unlock the device automatically. Set to `0` or omit to lock without auto-unlock.
+    </ParamField>
+  </Accordion>
+</AccordionGroup>
+
+<CodeGroup>
+
+```python Python
+# Lock indefinitely
+driver.execute_script('mobile: lock', {})
+
+# Lock for 5 seconds, then auto-unlock
+driver.execute_script('mobile: lock', {'seconds': 5})
+```
+
+```java Java
+driver.executeScript("mobile: lock", Map.ofEntries(
+    Map.entry("seconds", 5)
+));
+```
+
+```javascript WebdriverIO
+await driver.executeScript('mobile: lock', [{ seconds: 5 }]);
+```
+
+</CodeGroup>
+
+---
+
+## mobile: unlock
+
+Unlocks the device if it is locked. Does nothing if the screen is already unlocked.
+
+<AccordionGroup>
+  <Accordion title="Parameters">
+    <ParamField body="key" type="string" required>
+      The unlock credential. See the [Device Locking capabilities](/capabilities/device) for format details.
+    </ParamField>
+
+    <ParamField body="type" type="string" required>
+      The unlock type: `pin`, `pinWithKeyEvent`, `password`, or `pattern`. See the [Device Locking capabilities](/capabilities/device) for details.
+    </ParamField>
+
+    <ParamField body="strategy" type="string">
+      Unlock strategy: `locksettings` (default) or `uiautomator`.
+    </ParamField>
+
+    <ParamField body="timeoutMs" type="number">
+      Maximum milliseconds to wait for the device to unlock.
+    </ParamField>
+  </Accordion>
+</AccordionGroup>
+
+<CodeGroup>
+
+```python Python
+driver.execute_script('mobile: unlock', {
+    'key': '1234',
+    'type': 'pin'
+})
+```
+
+```java Java
+driver.executeScript("mobile: unlock", Map.ofEntries(
+    Map.entry("key", "1234"),
+    Map.entry("type", "pin")
+));
+```
+
+```javascript WebdriverIO
+await driver.executeScript('mobile: unlock', [{ key: '1234', type: 'pin' }]);
+```
+
+</CodeGroup>
+
+---
+
+## mobile: isLocked
+
+Returns whether the device screen is currently locked.
+
+<AccordionGroup>
+  <Accordion title="Returns">
+    <ResponseField name="result" type="boolean">
+      `true` if the screen is locked, `false` otherwise.
+    </ResponseField>
+  </Accordion>
+</AccordionGroup>
+
+<CodeGroup>
+
+```python Python
+is_locked = driver.execute_script('mobile: isLocked')
+print(is_locked)  # True or False
+```
+
+```java Java
+boolean isLocked = (boolean) driver.executeScript("mobile: isLocked", Map.ofEntries());
+```
+
+```javascript WebdriverIO
+const isLocked = await driver.executeScript('mobile: isLocked', [{}]);
+```
+
+</CodeGroup>
+
+---
+
+## Scheduled Actions
+
+`mobile: scheduleAction`, `mobile: getActionHistory`, and `mobile: unscheduleAction` allow you to run automation steps asynchronously on the server side — useful for handling short-lived popups or elements that disappear before a normal HTTP round-trip completes. Available since driver version 2.26.0.
+
+### mobile: scheduleAction
+
+Schedules an action that runs asynchronously on the device.
+
+<AccordionGroup>
+  <Accordion title="Parameters">
+    <ParamField body="name" type="string" required>
+      Unique name for the scheduled action.
+    </ParamField>
+
+    <ParamField body="steps" type="array" required>
+      Array of action steps to execute in sequence. Each step is a map with `type` (`gesture`, `source`, or `screenshot`), `name`, and `payload`. The payload must include `subtype`. Supported combinations:
+      - `gesture` / `click`, `longClick`, `doubleClick` — same payload as the corresponding gesture command
+      - `source` / `xml` — captures page source XML
+      - `screenshot` / `png` — captures a screenshot
+    </ParamField>
+
+    <ParamField body="times" type="number">
+      How many times the action executes. Defaults to `1`.
+    </ParamField>
+
+    <ParamField body="intervalMs" type="number">
+      Milliseconds between each execution. Defaults to `1000`.
+    </ParamField>
+
+    <ParamField body="maxPass" type="number">
+      Stop rescheduling after this many successful executions.
+    </ParamField>
+
+    <ParamField body="maxFail" type="number">
+      Stop rescheduling after this many failed executions.
+    </ParamField>
+
+    <ParamField body="maxHistoryItems" type="number">
+      Maximum history entries to retain. Defaults to `20`.
+    </ParamField>
+  </Accordion>
+</AccordionGroup>
+
+### mobile: getActionHistory
+
+Returns the execution history for a scheduled action.
+
+<AccordionGroup>
+  <Accordion title="Parameters">
+    <ParamField body="name" type="string" required>The scheduled action name.</ParamField>
+  </Accordion>
+  <Accordion title="Returns">
+    <ResponseField name="repeats" type="number">Number of times the action has run so far.</ResponseField>
+    <ResponseField name="stepResults" type="array">History of step execution results, sorted by timestamp descending. Each item contains `name`, `type`, `timestamp`, `passed`, `result`, and `exception`.</ResponseField>
+  </Accordion>
+</AccordionGroup>
+
+### mobile: unscheduleAction
+
+Stops and removes a scheduled action, returning its history (same structure as `mobile: getActionHistory`).
+
+<AccordionGroup>
+  <Accordion title="Parameters">
+    <ParamField body="name" type="string" required>The scheduled action name to stop.</ParamField>
+  </Accordion>
+</AccordionGroup>
+
+```python Python
+# Schedule an action to click a button when it appears
+driver.execute_script('mobile: scheduleAction', {
+    'name': 'acceptPopup',
+    'steps': [{
+        'type': 'gesture',
+        'name': 'clickAccept',
+        'payload': {
+            'subtype': 'click',
+            'locator': {'strategy': 'id', 'selector': 'com.example:id/accept_button'}
+        }
+    }],
+    'times': 30,
+    'intervalMs': 1000,
+    'maxPass': 1,
+})
+
+# ... trigger the popup in your test ...
+
+history = driver.execute_script('mobile: unscheduleAction', {'name': 'acceptPopup'})
+passed = any(
+    all(step['passed'] for step in run)
+    for run in history['stepResults']
+)
+assert passed, "Popup was never accepted"
+```

@@ -1,0 +1,140 @@
+---
+title: "Device & ADB Capabilities"
+description: "Capabilities for configuring device behavior, ADB connection, and emulator settings"
+---
+
+## ADB
+
+<ParamField path="appium:adbPort" type="number" default="5037">
+  Port number on the host machine where ADB is running.
+</ParamField>
+
+<ParamField path="appium:remoteAdbHost" type="string">
+  Address of the host where ADB is running (the value of the `-H` ADB command line option). Unset by default.
+</ParamField>
+
+<ParamField path="appium:adbExecTimeout" type="number" default="20000">
+  Maximum number of milliseconds to wait for a single ADB command to complete.
+</ParamField>
+
+<ParamField path="appium:clearDeviceLogsOnStart" type="boolean">
+  When `true`, UiAutomator2 deletes all existing logs in the device buffer before starting a new test.
+</ParamField>
+
+<ParamField path="appium:buildToolsVersion" type="string">
+  The version of Android build tools to use. By default, UiAutomator2 uses the most recent version installed on the machine. Specify a version when a known bug exists in the latest tools. Example: `28.0.3`.
+</ParamField>
+
+<ParamField path="appium:skipLogcatCapture" type="boolean" default="false">
+  When `true`, disables automatic logcat output collection during the test run. Log-related commands will not work while this is enabled.
+</ParamField>
+
+<ParamField path="appium:suppressKillServer" type="boolean" default="false">
+  When `true`, prevents the driver from ever explicitly killing the ADB server. Can be useful when ADB is connected over Wi-Fi.
+</ParamField>
+
+<ParamField path="appium:hideKeyboard" type="boolean">
+  When `true`, hides the on-screen keyboard for the duration of the session by assigning a custom "artificial" input method.
+
+  <Warning>
+    Only use this feature for special or exploratory cases. It changes how your application is interacted with compared to normal human use. Setting this capability explicitly to `false` triggers `adb shell ime reset` on session startup, resetting selected/enabled IMEs to the defaults for the current locale.
+  </Warning>
+</ParamField>
+
+<ParamField path="appium:mockLocationApp" type="string">
+  Package identifier of the app used as a system mock location provider. Has no effect on emulators. Set to `null` or an empty string to reset the mocked location provider. Defaults to the Appium Settings package identifier (`io.appium.settings`).
+
+  <Note>
+    Terminating the mock location provider app resets the mocked location data.
+  </Note>
+</ParamField>
+
+<ParamField path="appium:logcatFormat" type="string" default="threadtime">
+  The log print format for logcat output. One of: `brief`, `process`, `tag`, `thread`, `raw`, `time`, `threadtime`, `long`.
+</ParamField>
+
+<ParamField path="appium:logcatFilterSpecs" type="string">
+  Series of `tag[:priority]` filter specifications for logcat, where `tag` is a log component tag (or `*` for all) and priority is one of: `V` (Verbose), `D` (Debug), `I` (Info), `W` (Warn), `E` (Error), `F` (Fatal), `S` (Silent). If not specified, defaults to `ANDROID_LOG_TAGS` if set, otherwise `*:I`.
+</ParamField>
+
+## Emulator
+
+<ParamField path="appium:avd" type="string">
+  Name of the Android emulator to run the test on. Available emulator names can be listed with `avdmanager list avd`. If the named emulator is not already running, it will be launched on session startup.
+</ParamField>
+
+<ParamField path="appium:avdLaunchTimeout" type="number" default="60000">
+  Maximum number of milliseconds to wait until the Android emulator has started.
+</ParamField>
+
+<ParamField path="appium:avdReadyTimeout" type="number" default="60000">
+  Maximum number of milliseconds to wait until the Android emulator is fully booted and ready for use.
+</ParamField>
+
+<ParamField path="appium:avdArgs" type="string | string[]">
+  Either a string or an array of emulator [command line arguments](https://developer.android.com/studio/run/emulator-commandline).
+
+  <Note>
+    If the arguments contain `-wipe-data`, the emulator will be killed on session startup in order to wipe its data.
+  </Note>
+</ParamField>
+
+<ParamField path="appium:avdEnv" type="object">
+  Mapping of emulator [environment variables](https://developer.android.com/studio/command-line/variables) to set when launching the emulator.
+</ParamField>
+
+<ParamField path="appium:networkSpeed" type="string">
+  Desired network speed limit for the emulator. Only applied if the emulator is not already running when the test starts. See emulator [command line arguments](https://developer.android.com/studio/run/emulator-commandline) for accepted values.
+</ParamField>
+
+<ParamField path="appium:gpsEnabled" type="boolean">
+  Sets whether to enable (`true`) or disable (`false`) the GPS service in the emulator. Unset by default, which means the current GPS state is not changed.
+</ParamField>
+
+<ParamField path="appium:isHeadless" type="boolean" default="false">
+  When `true`, starts the emulator in headless mode (no UI is shown). Only applied if the emulator is not already running when the test starts.
+</ParamField>
+
+## Device Locking
+
+<ParamField path="appium:skipUnlock" type="boolean">
+  When `true`, skips the check for lock screen presence. The default behavior is to verify the presence of the screen lock before starting the test and unlock it, which can sometimes be unstable.
+
+  <Tip>
+    Setting this capability to `true` and disabling screen locking on your devices is highly recommended for CI environments, as the unlock check takes time and can be unreliable.
+  </Tip>
+</ParamField>
+
+<ParamField path="appium:unlockType" type="string">
+  The type of lock screen to unlock. Accepted values include `pin`, `pattern`, `password`, `fingerprint`, and others. See the [Unlock tutorial](https://github.com/appium/appium-uiautomator2-driver/blob/master/docs/unlock/main.md) for full details.
+</ParamField>
+
+<ParamField path="appium:unlockKey" type="string">
+  The unlock key value to use when unlocking the device. See the [Unlock tutorial](https://github.com/appium/appium-uiautomator2-driver/blob/master/docs/unlock/main.md) for details.
+</ParamField>
+
+<ParamField path="appium:unlockStrategy" type="string" default="locksettings">
+  The strategy to use for unlocking the device. Either `locksettings` (default) or `uiautomator`. See the [Unlock tutorial](https://github.com/appium/appium-uiautomator2-driver/blob/master/docs/unlock/main.md) for details.
+</ParamField>
+
+<ParamField path="appium:unlockSuccessTimeout" type="number" default="2000">
+  Maximum number of milliseconds to wait until the device is unlocked successfully.
+</ParamField>
+
+## Other
+
+<ParamField path="appium:newCommandTimeout" type="number" default="60">
+  How long, in seconds, the driver waits for a new command from the client before assuming the client has stopped sending requests and deleting the session. Set to `0` to disable the timer.
+</ParamField>
+
+<ParamField path="appium:timeZone" type="string">
+  Overrides the current device's time zone. The change is preserved until the next override. The identifier must be a valid name from the [tz database](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones), for example `Europe/Kyiv`. Available since driver version 3.1.0.
+</ParamField>
+
+<ParamField path="appium:userProfile" type="number">
+  Integer identifier of a [user profile](https://source.android.com/devices/tech/admin/multi-user). By default, the app under test is installed for the currently active user. Use this capability when testing how the app behaves when installed for a different user profile.
+</ParamField>
+
+<ParamField path="appium:disableSuppressAccessibilityService" type="boolean" default="false">
+  When `true`, instructs the instrumentation process not to suppress accessibility services during the automated test. Useful when the test itself relies on accessibility services.
+</ParamField>

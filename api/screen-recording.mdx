@@ -1,0 +1,267 @@
+---
+title: "Screen Recording"
+description: "Record and stream the device screen during automated test sessions"
+---
+
+UiAutomator2 supports two approaches for accessing a live screen feed during test sessions:
+
+- **Built-in MJPEG** — A lightweight built-in server with no additional host-side dependencies. Configure via capabilities.
+- **GStreamer MJPEG** — A feature-rich streaming server started via `mobile: startScreenStreaming`, requiring GStreamer on the host.
+
+---
+
+## Built-in MJPEG (no GStreamer required)
+
+The driver includes a built-in MJPEG server that starts automatically when the `appium:mjpegServerPort` capability is set. No additional software is required on the host machine.
+
+Configure the stream using these capabilities:
+
+| Capability | Type | Description |
+|---|---|---|
+| `appium:mjpegServerPort` | number | Port to start the built-in MJPEG server on. |
+| `appium:mjpegServerFramerate` | number | Target frame rate for the MJPEG stream. |
+| `appium:mjpegScalingFactor` | number | Scaling factor for the streamed frames (percentage). |
+| `appium:mjpegServerScreenshotQuality` | number | JPEG quality of each frame (1–100). |
+
+<Tip>
+  See the [MJPEG guide](/advanced/mjpeg) for a complete reference on the built-in MJPEG server, including how to connect a consumer and configure frame quality.
+</Tip>
+
+---
+
+## mobile: startScreenStreaming
+
+Starts a GStreamer-based MJPEG server that broadcasts the device screen. Multiple calls to this method have no effect until the previous session is stopped with [mobile: stopScreenStreaming](#mobile-stopscreenstreaming).
+
+<Note>
+  GStreamer with the `gst-plugins-base`, `gst-plugins-good`, and `gst-plugins-bad` packages must be installed and available in `PATH` on the host machine. The `adb_screen_streaming` server feature must also be enabled.
+</Note>
+
+<AccordionGroup>
+  <Accordion title="Parameters">
+    <ParamField body="width" type="number">
+      The scaled width of the streamed screen in pixels. Defaults to the actual screen width.
+    </ParamField>
+
+    <ParamField body="height" type="number">
+      The scaled height of the streamed screen in pixels. Defaults to the actual screen height.
+    </ParamField>
+
+    <ParamField body="bitRate" type="number">
+      Video bit rate in bits per second. Higher values improve quality but increase stream size. Defaults to `4000000` (4 Mbps).
+    </ParamField>
+
+    <ParamField body="host" type="string">
+      The IP address or hostname to start the MJPEG server on. Set to `'0.0.0.0'` to listen on all available network interfaces. Defaults to `'127.0.0.1'`.
+    </ParamField>
+
+    <ParamField body="pathname" type="string">
+      The HTTP request path the MJPEG server should respond on. If unset, any path on the given host and port combination will work. Must begin with `/`.
+    </ParamField>
+
+    <ParamField body="tcpPort" type="number">
+      Port for the internal TCP broadcast, which always starts on `127.0.0.1`. Defaults to `8094`.
+    </ParamField>
+
+    <ParamField body="port" type="number">
+      Port for the public-facing MJPEG HTTP server. Defaults to `8093`.
+    </ParamField>
+
+    <ParamField body="quality" type="number">
+      JPEG compression quality for each frame, in the range `[1, 100]`, where `100` is the best quality. Defaults to `70`.
+    </ParamField>
+
+    <ParamField body="considerRotation" type="boolean">
+      Set to `true` to have the GStreamer pipeline increase frame dimensions to accommodate both landscape and portrait orientations correctly. Use when the device may rotate during the streaming session. Defaults to `false`.
+    </ParamField>
+
+    <ParamField body="logPipelineDetails" type="boolean">
+      Set to `true` to log GStreamer pipeline events to the standard Appium log output. Useful for debugging stream issues. Defaults to `false`.
+    </ParamField>
+  </Accordion>
+</AccordionGroup>
+
+<CodeGroup>
+
+```java Java
+driver.executeScript("mobile: startScreenStreaming", Map.ofEntries(
+    Map.entry("width", 768),
+    Map.entry("height", 1024),
+    Map.entry("bitRate", 4000000),
+    Map.entry("port", 8093),
+    Map.entry("quality", 80)
+));
+```
+
+```python Python
+driver.execute_script('mobile: startScreenStreaming', {
+    'width': 768,
+    'height': 1024,
+    'bitRate': 4000000,
+    'port': 8093,
+    'quality': 80
+})
+```
+
+```javascript WebdriverIO
+await driver.executeScript('mobile: startScreenStreaming', [{
+    width: 768,
+    height: 1024,
+    bitRate: 4000000,
+    port: 8093,
+    quality: 80
+}]);
+```
+
+```ruby Ruby
+@driver.execute_script 'mobile: startScreenStreaming', {
+    width: 768,
+    height: 1024,
+    bitRate: 4000000,
+    port: 8093,
+    quality: 80
+}
+```
+
+</CodeGroup>
+
+---
+
+## mobile: stopScreenStreaming
+
+Stops the previously started GStreamer MJPEG screen streaming server. Does nothing if no streaming session is active.
+
+<CodeGroup>
+
+```java Java
+driver.executeScript("mobile: stopScreenStreaming", Map.ofEntries());
+```
+
+```python Python
+driver.execute_script('mobile: stopScreenStreaming', {})
+```
+
+```javascript WebdriverIO
+await driver.executeScript('mobile: stopScreenStreaming', [{}]);
+```
+
+```ruby Ruby
+@driver.execute_script 'mobile: stopScreenStreaming', {}
+```
+
+</CodeGroup>
+
+---
+
+## mobile: injectEmulatorCameraImage
+
+Simulates an image injection into the VirtualScene emulator camera background. Calls to this command seamlessly change the foreground picture in the virtual camera view to the supplied one. Useful for testing QR code scanning or other camera-based features. Available since driver version 3.2.0.
+
+<Warning>
+  This command only works on Android emulators. The image must be a valid PNG file — other image formats are not supported. You must also provide the `appium:injectedImageProperties` capability (even as an empty map) on newly created or reset emulators.
+</Warning>
+
+<AccordionGroup>
+  <Accordion title="Parameters">
+    <ParamField body="payload" type="string" required>
+      A valid base64-encoded PNG image payload. This image is shown on the virtual scene foreground as soon as a camera client app is opened.
+    </ParamField>
+  </Accordion>
+</AccordionGroup>
+
+<CodeGroup>
+
+```java Java
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.Base64;
+
+byte[] imageBytes = Files.readAllBytes(Paths.get("/path/to/image.png"));
+String payload = Base64.getEncoder().encodeToString(imageBytes);
+
+driver.executeScript("mobile: injectEmulatorCameraImage", Map.ofEntries(
+    Map.entry("payload", payload)
+));
+```
+
+```python Python
+import base64
+
+with open('/path/to/image.png', 'rb') as f:
+    payload = base64.b64encode(f.read()).decode('utf-8')
+
+driver.execute_script('mobile: injectEmulatorCameraImage', {'payload': payload})
+```
+
+```javascript WebdriverIO
+import fs from 'fs';
+import { Buffer } from 'buffer';
+
+const payload = Buffer.from(fs.readFileSync('/path/to/image.png')).toString('base64');
+await driver.executeScript('mobile: injectEmulatorCameraImage', [{ payload }]);
+```
+
+```ruby Ruby
+require 'base64'
+
+payload = Base64.strict_encode64(File.binread('/path/to/image.png'))
+@driver.execute_script 'mobile: injectEmulatorCameraImage', { payload: payload }
+```
+
+</CodeGroup>
+
+---
+
+## mobile: viewportScreenshot
+
+Takes a screenshot of the viewport area only, cropping out the status bar. Returns a base64-encoded PNG image.
+
+<CodeGroup>
+
+```python Python
+screenshot = driver.execute_script('mobile: viewportScreenshot')
+# screenshot is a base64-encoded PNG string
+```
+
+```java Java
+String screenshot = (String) driver.executeScript("mobile: viewportScreenshot", Map.ofEntries());
+```
+
+```javascript WebdriverIO
+const screenshot = await driver.executeScript('mobile: viewportScreenshot', [{}]);
+```
+
+</CodeGroup>
+
+---
+
+## mobile: viewportRect
+
+Returns the viewport rectangle, accounting for the status bar height. The returned coordinates define the usable screen area.
+
+<AccordionGroup>
+  <Accordion title="Returns">
+    <ResponseField name="left" type="number">Left boundary (always 0).</ResponseField>
+    <ResponseField name="top" type="number">Top boundary (status bar height in pixels).</ResponseField>
+    <ResponseField name="width" type="number">Viewport width in pixels.</ResponseField>
+    <ResponseField name="height" type="number">Viewport height in pixels (screen height minus status bar).</ResponseField>
+  </Accordion>
+</AccordionGroup>
+
+<CodeGroup>
+
+```python Python
+rect = driver.execute_script('mobile: viewportRect')
+print(f"Viewport: {rect['width']}x{rect['height']} at ({rect['left']}, {rect['top']})")
+```
+
+```java Java
+var rect = driver.executeScript("mobile: viewportRect", Map.ofEntries());
+```
+
+```javascript WebdriverIO
+const rect = await driver.executeScript('mobile: viewportRect', [{}]);
+console.log(rect.width, rect.height);
+```
+
+</CodeGroup>

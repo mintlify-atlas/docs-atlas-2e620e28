@@ -1,0 +1,176 @@
+---
+title: "Hybrid app testing"
+description: "Switch between native and web contexts to automate hybrid Android applications"
+---
+
+A hybrid app embeds one or more WebViews inside a native Android application. UiAutomator2 lets you switch between the native UI and any embedded web context within the same test session.
+
+<Note>
+  To test the Chrome browser directly rather than an embedded WebView, set `browserName: 'chrome'` in your capabilities instead of switching contexts.
+</Note>
+
+## How contexts work
+
+When a session starts, the driver is in the `NATIVE_APP` context. Each embedded WebView becomes an additional context named `WEBVIEW_<identifier>`, where the identifier is usually the app package name or a numeric process ID.
+
+```
+NATIVE_APP
+WEBVIEW_com.mypackage
+WEBVIEW_chrome
+```
+
+To automate content inside a WebView, switch to its context. Switch back to `NATIVE_APP` to interact with native elements again.
+
+## Listing available contexts
+
+<CodeGroup>
+
+```java Java
+Set<String> contexts = driver.getContextHandles();
+System.out.println(contexts);
+// [NATIVE_APP, WEBVIEW_com.mypackage]
+```
+
+```python Python
+contexts = driver.contexts
+print(contexts)
+# ['NATIVE_APP', 'WEBVIEW_com.mypackage']
+```
+
+```javascript WebdriverIO
+const contexts = await driver.getContexts();
+console.log(contexts);
+// ['NATIVE_APP', 'WEBVIEW_com.mypackage']
+```
+
+</CodeGroup>
+
+## Switching to a WebView
+
+<CodeGroup>
+
+```java Java
+driver.context("WEBVIEW_com.mypackage");
+// Now interact with web elements
+WebElement heading = driver.findElement(By.cssSelector("h1"));
+```
+
+```python Python
+driver.switch_to.context("WEBVIEW_com.mypackage")
+# Now interact with web elements
+heading = driver.find_element(By.CSS_SELECTOR, "h1")
+```
+
+```javascript WebdriverIO
+await driver.switchContext("WEBVIEW_com.mypackage");
+const heading = await driver.$("h1");
+```
+
+</CodeGroup>
+
+## Switching back to native
+
+<CodeGroup>
+
+```java Java
+driver.context("NATIVE_APP");
+```
+
+```python Python
+driver.switch_to.context("NATIVE_APP")
+```
+
+```javascript WebdriverIO
+await driver.switchContext("NATIVE_APP");
+```
+
+</CodeGroup>
+
+## Key capabilities
+
+The following capabilities control WebView detection and chromedriver behavior.
+
+<AccordionGroup>
+  <Accordion title="autoWebview and autoWebviewName">
+    Set `appium:autoWebview` to `true` to automatically switch to the WebView context after session startup. By default the driver switches to `WEBVIEW_<appPackage>`.
+
+    Use `appium:autoWebviewName` to specify an exact WebView context name instead of deriving it from the package:
+
+    ```json
+    {
+      "appium:autoWebview": true,
+      "appium:autoWebviewName": "myWebviewName"
+    }
+    ```
+
+    This results in the driver switching to `WEBVIEW_myWebviewName` after startup. Available since driver version 2.9.1.
+  </Accordion>
+
+  <Accordion title="ensureWebviewsHavePages">
+    When `appium:ensureWebviewsHavePages` is `true` (the default since Appium 1.19.0), WebViews with no loaded pages are excluded from `getContextHandles()`. The driver uses a devtools connection to check for pages, so you won't accidentally switch to an empty or background WebView.
+  </Accordion>
+
+  <Accordion title="chromedriverPort and chromedriverPorts">
+    Chromedriver communicates with the WebView over a local port. By default, any free port is selected. Set `appium:chromedriverPort` to a fixed value when running parallel tests to avoid conflicts.
+
+    Use `appium:chromedriverPorts` to provide an array of acceptable ports — an error is thrown if none are free.
+  </Accordion>
+
+  <Accordion title="webviewDevtoolsPort">
+    The local port used for the devtools connection to the WebView. Defaults to the first free port in the range 10900–11000. Set a fixed value when running parallel sessions.
+  </Accordion>
+</AccordionGroup>
+
+## Chromedriver compatibility
+
+The version of chromedriver must match the version of Chrome (or the embedded WebView) on the device. A mismatch causes the WebView context to fail to initialize.
+
+### Automatic chromedriver discovery
+
+UiAutomator2 can select the correct chromedriver automatically from a directory of available executables.
+
+| Capability | Description |
+| --- | --- |
+| `appium:chromedriverExecutableDir` | Path to a folder containing chromedriver executables. Also used as the download target if automatic download is enabled. |
+| `appium:chromedriverChromeMappingFile` | Path to a JSON file that maps WebView/browser versions to specific chromedriver versions. Use this for static, offline environments. |
+| `appium:enableWebviewDetailsCollection` | Enables extended WebView version detection via devtools to improve chromedriver version matching. `true` by default since Appium 1.22.0. |
+
+### Manual chromedriver selection
+
+If you need full control, point directly to a specific executable:
+
+```json
+{
+  "appium:chromedriverExecutable": "/path/to/chromedriver"
+}
+```
+
+To suppress version compatibility validation (not recommended for production):
+
+```json
+{
+  "appium:chromedriverDisableBuildCheck": true
+}
+```
+
+## Debugging tips
+
+<AccordionGroup>
+  <Accordion title="WebView does not appear in getContextHandles()">
+    1. Ensure the application enables WebView debugging: `WebView.setWebContentsDebuggingEnabled(true)` must be called in the app code.
+    2. Check that `appium:ensureWebviewsHavePages` is `true` — if the WebView has no pages it will be hidden.
+    3. Verify the device is running Chrome/WebView 55 or later, which is required for devtools-based detection.
+  </Accordion>
+
+  <Accordion title="Context switch fails with chromedriver error">
+    Confirm the chromedriver version matches the WebView version on the device. Run `adb shell dumpsys package com.google.android.webview | grep versionName` to check the installed WebView version, then download the matching chromedriver from [chromedriver.chromium.org](https://chromedriver.chromium.org/downloads).
+  </Accordion>
+
+  <Accordion title="Screenshots show blank WebView">
+    Set `appium:nativeWebScreenshot` to `true` to use the UiAutomator-based screenshot provider instead of the chromedriver one. This is useful when chromedriver's screenshot endpoint returns an empty image.
+  </Accordion>
+
+  <Accordion title="Chromedriver output is not visible in logs">
+    Set `appium:showChromedriverLog` to `true` to forward all chromedriver output to the Appium server log.
+  </Accordion>
+</AccordionGroup>

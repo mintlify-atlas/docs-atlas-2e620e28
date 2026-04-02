@@ -1,0 +1,440 @@
+---
+title: "Mobile gestures"
+description: "Automate touch gestures on Android using UiAutomator2 mobile extension commands"
+---
+
+UiAutomator2 provides a set of mobile extension commands that act as high-level shortcuts for common Android gestures. These commands are built on the same foundation as the W3C Actions API and are the recommended way to automate standard touch interactions.
+
+For more complex gesture sequences, see the [W3C Actions API](https://appiumpro.com/editions/29-automating-complex-gestures-with-the-w3c-actions-api).
+
+## Invoking mobile commands
+
+All gesture commands are invoked through `executeScript` (or its language-specific equivalents):
+
+<CodeGroup>
+
+```java Java
+// Java 11+
+driver.executeScript("mobile: clickGesture", Map.of(
+    "elementId", ((RemoteWebElement) element).getId()
+));
+```
+
+```python Python
+driver.execute_script('mobile: clickGesture', {
+    'elementId': element.id
+})
+```
+
+```javascript WebdriverIO
+await driver.executeScript('mobile: clickGesture', [{
+    elementId: element.elementId
+}]);
+```
+
+</CodeGroup>
+
+---
+
+## mobile: clickGesture
+
+Performs a single click on the given element or coordinates. Recommended as a workaround when the native `tap` call fails despite correct coordinates, since this extension uses the same underlying mechanism as W3C Actions.
+
+Available since UiAutomator2 driver 1.71.0.
+
+**Arguments**
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `elementId` | string | no | ID of the element to click. If omitted, `x` and `y` must be provided. |
+| `x` | number | no | X coordinate. If `elementId` is also provided, treated as offset from the element's top-left corner. |
+| `y` | number | no | Y coordinate. If `elementId` is also provided, treated as offset from the element's top-left corner. |
+| `locator` | object | no | Map containing `strategy` and `selector` to locate a dynamic element. |
+
+<CodeGroup>
+
+```java Java
+driver.executeScript("mobile: clickGesture", ImmutableMap.of(
+    "elementId", ((RemoteWebElement) element).getId()
+));
+```
+
+```python Python
+driver.execute_script('mobile: clickGesture', {'x': 100, 'y': 100})
+```
+
+```javascript WebdriverIO
+await driver.executeScript('mobile: clickGesture', [{x: 100, y: 100}]);
+```
+
+</CodeGroup>
+
+---
+
+## mobile: longClickGesture
+
+Performs a long-press on the given element or coordinates.
+
+Available since Appium v1.19.
+
+**Arguments**
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `elementId` | string | no | ID of the element to long-press. If omitted, `x` and `y` must be provided. |
+| `x` | number | no | X coordinate or offset from element's top-left corner. |
+| `y` | number | no | Y coordinate or offset from element's top-left corner. |
+| `duration` | number | no | Press duration in milliseconds. Default: `500`. Must not be negative. |
+| `locator` | object | no | Map containing `strategy` and `selector` to locate a dynamic element. |
+
+<CodeGroup>
+
+```java Java
+((JavascriptExecutor) driver).executeScript("mobile: longClickGesture", ImmutableMap.of(
+    "elementId", ((RemoteWebElement) element).getId()
+));
+```
+
+```python Python
+driver.execute_script('mobile: longClickGesture', {
+    'x': 100,
+    'y': 100,
+    'duration': 1000
+})
+```
+
+</CodeGroup>
+
+---
+
+## mobile: doubleClickGesture
+
+Performs a double-click on the given element or coordinates.
+
+Available since Appium v1.21.
+
+**Arguments**
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `elementId` | string | no | ID of the element to double-click. If omitted, `x` and `y` must be provided. |
+| `x` | number | no | X coordinate or offset from element's top-left corner. |
+| `y` | number | no | Y coordinate or offset from element's top-left corner. |
+| `locator` | object | no | Map containing `strategy` and `selector` to locate a dynamic element. |
+
+<CodeGroup>
+
+```java Java
+((JavascriptExecutor) driver).executeScript("mobile: doubleClickGesture", ImmutableMap.of(
+    "elementId", ((RemoteWebElement) element).getId()
+));
+```
+
+```python Python
+driver.execute_script('mobile: doubleClickGesture', {'x': 100, 'y': 100})
+```
+
+</CodeGroup>
+
+---
+
+## mobile: dragGesture
+
+Drags the given element (or starting coordinates) to a target position.
+
+Available since Appium v1.19.
+
+**Arguments**
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `elementId` | string | no | ID of the element to drag. If omitted, `startX` and `startY` must be provided. |
+| `startX` | number | no | Starting X coordinate. If `elementId` is also provided, treated as an offset from the element's top-left corner. |
+| `startY` | number | no | Starting Y coordinate. If `elementId` is also provided, treated as an offset from the element's top-left corner. |
+| `endX` | number | **yes** | Ending X coordinate. |
+| `endY` | number | **yes** | Ending Y coordinate. |
+| `speed` | number | no | Speed in pixels per second. Must not be negative. Default: `2500 * displayDensity`. |
+
+<CodeGroup>
+
+```java Java
+((JavascriptExecutor) driver).executeScript("mobile: dragGesture", ImmutableMap.of(
+    "elementId", ((RemoteWebElement) element).getId(),
+    "endX", 100,
+    "endY", 100
+));
+```
+
+```python Python
+driver.execute_script('mobile: dragGesture', {
+    'startX': 200,
+    'startY': 400,
+    'endX': 200,
+    'endY': 100
+})
+```
+
+</CodeGroup>
+
+---
+
+## mobile: flingGesture
+
+Performs a fling gesture on the given element or bounding area. Returns `true` if the view can still scroll further in the given direction.
+
+Available since Appium v1.19.
+
+**Arguments**
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `elementId` | string | no | ID of the element to fling. If omitted, a bounding area must be provided. |
+| `left` | number | no | Left coordinate of the fling bounding area. |
+| `top` | number | no | Top coordinate of the fling bounding area. |
+| `width` | number | no | Width of the fling bounding area. |
+| `height` | number | no | Height of the fling bounding area. |
+| `direction` | string | **yes** | Direction of the fling: `up`, `down`, `left`, or `right` (case-insensitive). |
+| `speed` | number | no | Speed in pixels per second. Must be greater than the minimum fling velocity (50 by default). Default: `7500 * displayDensity`. |
+
+**Returns:** `boolean` — `true` if the view can still scroll in the given direction.
+
+<CodeGroup>
+
+```java Java
+boolean canScrollMore = (Boolean) ((JavascriptExecutor) driver).executeScript(
+    "mobile: flingGesture",
+    ImmutableMap.of(
+        "elementId", ((RemoteWebElement) element).getId(),
+        "direction", "down",
+        "speed", 500
+    )
+);
+```
+
+```python Python
+can_scroll_more = driver.execute_script('mobile: flingGesture', {
+    'elementId': element.id,
+    'direction': 'down',
+    'speed': 500
+})
+```
+
+```javascript WebdriverIO
+const canScrollMore = await driver.executeScript('mobile: flingGesture', [{
+    elementId: element.elementId,
+    direction: 'right',
+    speed: 500,
+}]);
+```
+
+</CodeGroup>
+
+---
+
+## mobile: pinchOpenGesture
+
+Performs a pinch-open (zoom in) gesture on the given element or bounding area.
+
+Available since Appium v1.19.
+
+**Arguments**
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `elementId` | string | no | ID of the element to pinch. If omitted, a bounding area must be provided. |
+| `left` | number | no | Left coordinate of the pinch bounding area. |
+| `top` | number | no | Top coordinate of the pinch bounding area. |
+| `width` | number | no | Width of the pinch bounding area. |
+| `height` | number | no | Height of the pinch bounding area. |
+| `percent` | number | **yes** | Size of the pinch as a fraction of the area. Range: `0.0`–`1.0` where `1.0` = 100%. |
+| `speed` | number | no | Speed in pixels per second. Must not be negative. Default: `2500 * displayDensity`. |
+
+<CodeGroup>
+
+```java Java
+((JavascriptExecutor) driver).executeScript("mobile: pinchOpenGesture", ImmutableMap.of(
+    "elementId", ((RemoteWebElement) element).getId(),
+    "percent", 0.75
+));
+```
+
+```python Python
+driver.execute_script('mobile: pinchOpenGesture', {
+    'elementId': element.id,
+    'percent': 0.75
+})
+```
+
+</CodeGroup>
+
+---
+
+## mobile: pinchCloseGesture
+
+Performs a pinch-close (zoom out) gesture on the given element or bounding area.
+
+Available since Appium v1.19.
+
+**Arguments**
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `elementId` | string | no | ID of the element to pinch. If omitted, a bounding area must be provided. |
+| `left` | number | no | Left coordinate of the pinch bounding area. |
+| `top` | number | no | Top coordinate of the pinch bounding area. |
+| `width` | number | no | Width of the pinch bounding area. |
+| `height` | number | no | Height of the pinch bounding area. |
+| `percent` | number | **yes** | Size of the pinch as a fraction of the area. Range: `0.0`–`1.0` where `1.0` = 100%. |
+| `speed` | number | no | Speed in pixels per second. Must not be negative. Default: `2500 * displayDensity`. |
+
+<CodeGroup>
+
+```java Java
+((JavascriptExecutor) driver).executeScript("mobile: pinchCloseGesture", ImmutableMap.of(
+    "elementId", ((RemoteWebElement) element).getId(),
+    "percent", 0.75
+));
+```
+
+```python Python
+driver.execute_script('mobile: pinchCloseGesture', {
+    'elementId': element.id,
+    'percent': 0.75
+})
+```
+
+</CodeGroup>
+
+---
+
+## mobile: swipeGesture
+
+Performs a swipe in the given direction across the element or bounding area.
+
+Available since Appium v1.19.
+
+**Arguments**
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `elementId` | string | no | ID of the element to swipe. If omitted, a bounding area must be provided. |
+| `left` | number | no | Left coordinate of the swipe bounding area. |
+| `top` | number | no | Top coordinate of the swipe bounding area. |
+| `width` | number | no | Width of the swipe bounding area. |
+| `height` | number | no | Height of the swipe bounding area. |
+| `direction` | string | **yes** | Swipe direction: `up`, `down`, `left`, or `right` (case-insensitive). |
+| `percent` | number | **yes** | Size of the swipe as a fraction of the area. Range: `0.0`–`1.0` where `1.0` = 100%. |
+| `speed` | number | no | Speed in pixels per second. Must not be negative. Default: `5000 * displayDensity`. |
+
+<CodeGroup>
+
+```java Java
+((JavascriptExecutor) driver).executeScript("mobile: swipeGesture", ImmutableMap.of(
+    "left", 100, "top", 100, "width", 200, "height", 200,
+    "direction", "left",
+    "percent", 0.75
+));
+```
+
+```python Python
+driver.execute_script('mobile: swipeGesture', {
+    'left': 100,
+    'top': 100,
+    'width': 200,
+    'height': 200,
+    'direction': 'left',
+    'percent': 0.75
+})
+```
+
+</CodeGroup>
+
+---
+
+## mobile: scrollGesture
+
+Performs a scroll gesture on the given element or bounding area. Returns `true` if the view can still scroll further in the given direction.
+
+Available since Appium v1.19.
+
+**Arguments**
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `elementId` | string | no | ID of the element to scroll. If omitted, a bounding area must be provided. |
+| `left` | number | no | Left coordinate of the scroll bounding area. |
+| `top` | number | no | Top coordinate of the scroll bounding area. |
+| `width` | number | no | Width of the scroll bounding area. |
+| `height` | number | no | Height of the scroll bounding area. |
+| `direction` | string | **yes** | Scroll direction: `up`, `down`, `left`, or `right` (case-insensitive). |
+| `percent` | number | **yes** | Size of the scroll as a fraction of the area. Must be greater than `0`. Values above `1.0` scroll multiple pages. |
+| `speed` | number | no | Speed in pixels per second. Must not be negative. Default: `5000 * displayDensity`. |
+
+**Returns:** `boolean` — `true` if the view can still scroll in the given direction.
+
+<CodeGroup>
+
+```java Java
+boolean canScrollMore = (Boolean) ((JavascriptExecutor) driver).executeScript(
+    "mobile: scrollGesture",
+    ImmutableMap.of(
+        "left", 100, "top", 100, "width", 200, "height", 200,
+        "direction", "down",
+        "percent", 1.0
+    )
+);
+```
+
+```python Python
+can_scroll_more = driver.execute_script('mobile: scrollGesture', {
+    'left': 100, 'top': 100, 'width': 200, 'height': 200,
+    'direction': 'down',
+    'percent': 3.0
+})
+```
+
+</CodeGroup>
+
+---
+
+## mobile: scroll
+
+Scrolls the given scrollable element until an element matched by `strategy` and `selector` becomes visible. If the target element is already visible, this command returns immediately. Otherwise it scrolls to the beginning and advances step-by-step. Scroll direction (vertical or horizontal) is detected automatically.
+
+<Note>
+  This command requires the scrollable element to have been found using the `-android uiautomator` strategy.
+</Note>
+
+**Arguments**
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `elementId` | string | no | ID of the scrollable container. Must have been located via `-android uiautomator`. If omitted, the first available scrollable view is used. |
+| `strategy` | string | **yes** | Location strategy for the target element: `accessibility id`, `class name`, or `-android uiautomator`. |
+| `selector` | string | **yes** | Selector value for the chosen strategy. |
+| `maxSwipes` | number | no | Maximum swipes before giving up. Defaults to the scrollable element's `getMaxSearchSwipes()` value. |
+
+<CodeGroup>
+
+```java Java
+driver.executeScript("mobile: scroll", ImmutableMap.of(
+    "strategy", "-android uiautomator",
+    "selector", "new UiSelector().text(\"Privacy Policy\")"
+));
+```
+
+```python Python
+driver.execute_script('mobile: scroll', {
+    'strategy': 'accessibility id',
+    'selector': 'Privacy Policy'
+})
+```
+
+```javascript WebdriverIO
+await driver.executeScript('mobile: scroll', [{
+    strategy: 'accessibility id',
+    selector: 'Privacy Policy',
+}]);
+```
+
+</CodeGroup>

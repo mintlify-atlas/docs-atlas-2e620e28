@@ -1,0 +1,126 @@
+---
+title: "Web Context Capabilities"
+description: "Capabilities for automating web views and Chrome in hybrid Android apps"
+---
+
+These capabilities control how the UiAutomator2 driver interacts with web views and Chrome in hybrid Android applications. For a full walkthrough on switching contexts and automating hybrid apps, see [Hybrid Apps](/guides/hybrid-apps).
+
+<Note>
+  The driver supports automatic discovery of a compatible chromedriver based on the Chrome or WebView version installed on the device. Set `appium:chromedriverExecutableDir` to a folder of chromedriver binaries and optionally `appium:chromedriverChromeMappingFile` to a static version mapping file. The driver will select the best match automatically. See [Automatic Chromedriver Discovery](#automatic-chromedriver-discovery) below for more details.
+</Note>
+
+## Web view switching
+
+<ParamField path="appium:autoWebview" type="boolean" default="false">
+  When `true`, the UiAutomator2 driver automatically switches to the web view context after the session starts. The context name is derived as `WEBVIEW_` + the value of `appium:appPackage` (e.g. `WEBVIEW_com.mypackage`).
+</ParamField>
+
+<ParamField path="appium:autoWebviewName" type="string">
+  Overrides the web view context name used when `appium:autoWebview` is `true`. For example, setting this to `myWebviewName` causes the driver to switch to `WEBVIEW_myWebviewName` instead of using the `appium:appPackage` value. Takes priority over the package-based name. Available since driver version 2.9.1. Unset by default.
+</ParamField>
+
+<ParamField path="appium:autoWebviewTimeout" type="number" default="2000">
+  Maximum number of milliseconds to wait for a web view to become available when `appium:autoWebview` is `true`.
+</ParamField>
+
+<ParamField path="appium:recreateChromeDriverSessions" type="boolean" default="false">
+  When `true`, the chromedriver session is always killed and recreated when switching contexts, rather than being suspended and resumed.
+</ParamField>
+
+## Web view detection
+
+<ParamField path="appium:webviewDevtoolsPort" type="number" default="10900–11000">
+  Local port number to use for devtools communication. By default, the first free port in the `10900..11000` range is selected.
+
+  <Tip>
+    Set this explicitly when running parallel tests to avoid port conflicts.
+  </Tip>
+</ParamField>
+
+<ParamField path="appium:ensureWebviewsHavePages" type="boolean" default="true">
+  When `true`, web views that have no pages are excluded from the `getContexts` output. The driver uses a devtools connection to retrieve page information.
+</ParamField>
+
+<ParamField path="appium:enableWebviewDetailsCollection" type="boolean" default="true">
+  When `true`, retrieves extended web view information using the devtools protocol. Enabling this capability helps the driver detect the required chromedriver version more precisely.
+</ParamField>
+
+## Chromedriver configuration
+
+<ParamField path="appium:chromedriverPort" type="number">
+  Port number for chromedriver communication. A free port is selected automatically if unset.
+</ParamField>
+
+<ParamField path="appium:chromedriverPorts" type="number[]">
+  Array of possible port numbers to assign for chromedriver communication. An error is thrown if none of the specified ports are free.
+</ParamField>
+
+<ParamField path="appium:chromedriverArgs" type="string[]">
+  Array of chromedriver command line arguments, as listed by `chromedriver --help`.
+
+  <Note>
+    Not all command line arguments available for the desktop browser are also available for the mobile one.
+  </Note>
+</ParamField>
+
+<ParamField path="appium:chromedriverExecutable" type="string">
+  Full path to the chromedriver executable on the server filesystem. Use this to pin a specific chromedriver binary.
+</ParamField>
+
+<ParamField path="appium:chromedriverExecutableDir" type="string">
+  Full path to a folder containing chromedriver executables. This folder is also used to store downloaded chromedriver executables when automatic download is enabled.
+</ParamField>
+
+<ParamField path="appium:chromedriverChromeMappingFile" type="string">
+  Full path to a chromedriver version mapping file. Used to statically map web view or browser versions to the chromedriver versions that can automate them.
+</ParamField>
+
+<ParamField path="appium:chromedriverUseSystemExecutable" type="boolean" default="false">
+  When `true`, forces the use of the chromedriver downloaded automatically by Appium during installation. This driver version may not be compatible with the target browser or web view.
+</ParamField>
+
+<ParamField path="appium:chromedriverDisableBuildCheck" type="boolean" default="false">
+  When `true`, disables the compatibility validation between the current chromedriver and the target browser or web view.
+
+  <Warning>
+    Use with care. Disabling the build check can result in automation failures that are difficult to diagnose if the chromedriver version is incompatible with the browser.
+  </Warning>
+</ParamField>
+
+## Screenshots and logging
+
+<ParamField path="appium:nativeWebScreenshot" type="boolean" default="false">
+  When `true`, uses the screenshot endpoint provided by the UiAutomator framework rather than the one provided by chromedriver. Use this when you experience issues with chromedriver screenshots in web context.
+</ParamField>
+
+<ParamField path="appium:showChromedriverLog" type="boolean" default="false">
+  When `true`, all output from the chromedriver binary is forwarded to the Appium server log.
+</ParamField>
+
+## BiDi
+
+<ParamField path="appium:chromedriverForwardBiDi" type="boolean" default="false">
+  When `true`, enables automated forwarding of the chromedriver BiDi WebSocket to the UiAutomator2 driver WebSocket. This allows browser-specific BiDi commands to be sent while in a web view context. The WebSocket connection is terminated when the session context changes.
+
+  <Note>
+    Requires the `webDriverUrl` session capability to be set to `true`. Older chromedriver versions may not fully support or may not support at all the BiDi specification.
+  </Note>
+</ParamField>
+
+## W3C standard
+
+<ParamField path="pageLoadStrategy" type="string">
+  Page load strategy as defined by the [W3C WebDriver specification](https://www.w3.org/TR/webdriver/#capabilities). Accepted values are `none`, `eager`, and `normal`.
+</ParamField>
+
+## Automatic chromedriver discovery
+
+When `appium:chromedriverExecutable` is not set, the driver attempts to find a compatible chromedriver automatically by:
+
+1. Checking the version of Chrome or WebView installed on the device (requires `appium:enableWebviewDetailsCollection` to be `true`).
+2. Searching the directory specified by `appium:chromedriverExecutableDir` for a matching binary.
+3. Consulting the static mapping file specified by `appium:chromedriverChromeMappingFile` if provided.
+
+If no compatible chromedriver is found locally, Appium can download one automatically when the `appium:chromedriverExecutableDir` capability is set and the server has internet access.
+
+For more information on setting up chromedriver for hybrid app testing, see [Hybrid Apps](/guides/hybrid-apps).

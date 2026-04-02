@@ -1,0 +1,258 @@
+---
+title: "File Transfer Commands"
+description: "Mobile extension commands for pushing and pulling files between host and device"
+---
+
+These commands allow you to transfer files between the host machine and the device under test. Files can be placed in standard device paths (e.g. `/sdcard/`) or inside application bundle sandboxes using the `@bundleId/path` syntax.
+
+<Note>
+  To access files inside an application's sandbox using the `@my.app.id/path` format, the application must have [debugging enabled](https://developer.android.com/studio/debug).
+</Note>
+
+---
+
+## mobile: pullFile
+
+Pulls a single file from the device and returns its content as a base64-encoded string.
+
+<AccordionGroup>
+  <Accordion title="Parameters">
+    <ParamField body="remotePath" type="string" required>
+      The full path to the file on the device (e.g. `/sdcard/myfile.txt`), or a path inside an application bundle using the format `@my.app.id/my/path`. An exception is thrown if the file does not exist.
+    </ParamField>
+  </Accordion>
+  <Accordion title="Returns">
+    <ResponseField name="result" type="string">
+      The base64-encoded content of the remote file.
+    </ResponseField>
+  </Accordion>
+</AccordionGroup>
+
+<CodeGroup>
+
+```java Java
+import java.util.Base64;
+
+String b64 = (String) driver.executeScript("mobile: pullFile", Map.ofEntries(
+    Map.entry("remotePath", "/sdcard/myfile.txt")
+));
+byte[] data = Base64.getDecoder().decode(b64);
+```
+
+```python Python
+import base64
+
+result = driver.execute_script('mobile: pullFile', {'remotePath': '/sdcard/myfile.txt'})
+data = base64.b64decode(result)
+with open('/local/downloaded.txt', 'wb') as f:
+    f.write(data)
+```
+
+```javascript WebdriverIO
+import { Buffer } from 'buffer';
+
+const b64 = await driver.executeScript('mobile: pullFile', [{ remotePath: '/sdcard/myfile.txt' }]);
+const data = Buffer.from(b64, 'base64');
+```
+
+```ruby Ruby
+require 'base64'
+
+b64 = @driver.execute_script 'mobile: pullFile', { remotePath: '/sdcard/myfile.txt' }
+data = Base64.decode64(b64)
+File.write('/local/downloaded.txt', data, mode: 'wb')
+```
+
+</CodeGroup>
+
+---
+
+## mobile: pushFile
+
+Pushes a file to the device. If a file with the same name already exists at the destination, it is silently overwritten.
+
+<AccordionGroup>
+  <Accordion title="Parameters">
+    <ParamField body="remotePath" type="string" required>
+      The destination path on the device (e.g. `/sdcard/myfile.txt`), or a path inside an application bundle using the format `@my.app.id/my/path`.
+    </ParamField>
+
+    <ParamField body="payload" type="string" required>
+      The base64-encoded content of the file to push.
+    </ParamField>
+  </Accordion>
+</AccordionGroup>
+
+<CodeGroup>
+
+```java Java
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Base64;
+
+byte[] fileBytes = Files.readAllBytes(Path.of("/local/file.txt"));
+String b64 = Base64.getEncoder().encodeToString(fileBytes);
+
+driver.executeScript("mobile: pushFile", Map.ofEntries(
+    Map.entry("remotePath", "/sdcard/file.txt"),
+    Map.entry("payload", b64)
+));
+```
+
+```python Python
+import base64
+
+with open('/local/file.txt', 'rb') as f:
+    content = base64.b64encode(f.read()).decode('utf-8')
+
+driver.execute_script('mobile: pushFile', {
+    'remotePath': '/sdcard/file.txt',
+    'payload': content
+})
+```
+
+```javascript WebdriverIO
+import fs from 'fs';
+import { Buffer } from 'buffer';
+
+const fileData = fs.readFileSync('/local/file.txt');
+const b64 = Buffer.from(fileData).toString('base64');
+
+await driver.executeScript('mobile: pushFile', [{
+    remotePath: '/sdcard/file.txt',
+    payload: b64
+}]);
+```
+
+```ruby Ruby
+require 'base64'
+
+content = Base64.encode64(File.read('/local/file.txt', mode: 'rb'))
+@driver.execute_script 'mobile: pushFile', {
+    remotePath: '/sdcard/file.txt',
+    payload: content
+}
+```
+
+</CodeGroup>
+
+---
+
+## mobile: pullFolder
+
+Pulls an entire directory from the device and returns its contents as a base64-encoded zip archive.
+
+<AccordionGroup>
+  <Accordion title="Parameters">
+    <ParamField body="remotePath" type="string" required>
+      The full path to the remote folder on the device (e.g. `/sdcard/myfolder/`). Supports the same `@my.app.id/path` format as [mobile: pullFile](#mobile-pullfile).
+    </ParamField>
+  </Accordion>
+  <Accordion title="Returns">
+    <ResponseField name="result" type="string">
+      The base64-encoded content of a zip archive containing all files in the remote folder.
+    </ResponseField>
+  </Accordion>
+</AccordionGroup>
+
+<CodeGroup>
+
+```java Java
+import java.util.Base64;
+import java.io.*;
+import java.nio.file.*;
+
+String b64 = (String) driver.executeScript("mobile: pullFolder", Map.ofEntries(
+    Map.entry("remotePath", "/sdcard/myfolder/")
+));
+byte[] zipBytes = Base64.getDecoder().decode(b64);
+Files.write(Path.of("/local/myfolder.zip"), zipBytes);
+```
+
+```python Python
+import base64
+
+result = driver.execute_script('mobile: pullFolder', {'remotePath': '/sdcard/myfolder/'})
+zip_data = base64.b64decode(result)
+with open('/local/myfolder.zip', 'wb') as f:
+    f.write(zip_data)
+```
+
+```javascript WebdriverIO
+import fs from 'fs';
+import { Buffer } from 'buffer';
+
+const b64 = await driver.executeScript('mobile: pullFolder', [{ remotePath: '/sdcard/myfolder/' }]);
+fs.writeFileSync('/local/myfolder.zip', Buffer.from(b64, 'base64'));
+```
+
+```ruby Ruby
+require 'base64'
+
+b64 = @driver.execute_script 'mobile: pullFolder', { remotePath: '/sdcard/myfolder/' }
+File.write('/local/myfolder.zip', Base64.decode64(b64), mode: 'wb')
+```
+
+</CodeGroup>
+
+---
+
+## mobile: deleteFile
+
+Deletes a file on the device.
+
+<AccordionGroup>
+  <Accordion title="Parameters">
+    <ParamField body="remotePath" type="string" required>
+      The full path to the remote file to delete (e.g. `/sdcard/myfile.txt`), or a path inside an application bundle using the format `@my.app.id/path/in/bundle`.
+    </ParamField>
+  </Accordion>
+</AccordionGroup>
+
+<CodeGroup>
+
+```java Java
+driver.executeScript("mobile: deleteFile", Map.ofEntries(
+    Map.entry("remotePath", "/sdcard/myfile.txt")
+));
+```
+
+```python Python
+driver.execute_script('mobile: deleteFile', {'remotePath': '/sdcard/myfile.txt'})
+```
+
+```javascript WebdriverIO
+await driver.executeScript('mobile: deleteFile', [{ remotePath: '/sdcard/myfile.txt' }]);
+```
+
+```ruby Ruby
+@driver.execute_script 'mobile: deleteFile', { remotePath: '/sdcard/myfile.txt' }
+```
+
+</CodeGroup>
+
+---
+
+## Push and pull example
+
+The following Python example shows a complete round-trip: writing a file to the device and reading it back.
+
+```python Python
+import base64
+
+# Push a file to the device
+with open('/local/file.txt', 'rb') as f:
+    content = base64.b64encode(f.read()).decode('utf-8')
+
+driver.execute_script('mobile: pushFile', {
+    'remotePath': '/sdcard/file.txt',
+    'payload': content
+})
+
+# Pull the file back from the device
+result = driver.execute_script('mobile: pullFile', {'remotePath': '/sdcard/file.txt'})
+data = base64.b64decode(result)
+
+with open('/local/downloaded.txt', 'wb') as f:
+    f.write(data)
+```

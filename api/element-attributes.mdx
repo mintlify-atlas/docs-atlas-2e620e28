@@ -1,0 +1,221 @@
+---
+title: "Element attributes"
+description: "All element attributes supported by the UiAutomator2 driver for element identification and inspection"
+---
+
+UiAutomator2 exposes a rich set of attributes on every accessibility node. You can read any attribute using `get_attribute()` (Python), `getAttribute()` (Java/JavaScript), or the equivalent in your client library.
+
+```python
+el = driver.find_element('accessibility id', 'Submit')
+# Get standard attribute
+print(el.get_attribute('content-desc'))
+print(el.get_attribute('resource-id'))
+print(el.get_attribute('bounds'))
+print(el.get_attribute('text'))
+```
+
+---
+
+## Standard attributes
+
+<ResponseField name="checkable" type="string">
+  Whether the element is checkable. Example: `'true'`
+</ResponseField>
+
+<ResponseField name="checked" type="string">
+  Whether the element is checked. Always `'false'` if the element is not checkable. Example: `'false'`
+</ResponseField>
+
+<ResponseField name="class / className" type="string">
+  The fully-qualified class name of the element. May be `null` for some elements. Example: `'android.view.View'`
+</ResponseField>
+
+<ResponseField name="clickable" type="string">
+  Whether the element can be clicked. Example: `'false'`
+</ResponseField>
+
+<ResponseField name="content-desc / contentDescription" type="string">
+  The content-description attribute of the accessible element. Example: `'foo'`
+</ResponseField>
+
+<ResponseField name="enabled" type="string">
+  Whether the element is enabled and can be interacted with. Example: `'true'`
+</ResponseField>
+
+<ResponseField name="focusable" type="string">
+  Whether the element can receive input focus. Example: `'true'`
+</ResponseField>
+
+<ResponseField name="focused" type="string">
+  Whether the element is currently focused. Always `'false'` if the element is not focusable. Example: `'false'`
+</ResponseField>
+
+<ResponseField name="long-clickable / longClickable" type="string">
+  Whether the element accepts long-click events. Example: `'false'`
+</ResponseField>
+
+<ResponseField name="package" type="string">
+  The package identifier of the application the element belongs to. Example: `'com.mycompany'`
+</ResponseField>
+
+<ResponseField name="password" type="string">
+  Whether the element is a password input field. Example: `'true'`
+</ResponseField>
+
+<ResponseField name="resource-id / resourceId" type="string">
+  The element's resource identifier. May be `null`. Example: `'com.mycompany:id/resId'`
+</ResponseField>
+
+<ResponseField name="scrollable" type="string">
+  Whether the element is scrollable. Example: `'true'`
+</ResponseField>
+
+<ResponseField name="selected" type="string">
+  Whether the element is selected. Example: `'false'`
+</ResponseField>
+
+<ResponseField name="text / name" type="string">
+  The element's visible text. Never `null`. Example: `'my text'`
+</ResponseField>
+
+<ResponseField name="hint" type="string">
+  The element's hint text. Always `null` on Android versions below Oreo (API 26). Example: `'my hint text'`
+</ResponseField>
+
+<ResponseField name="bounds" type="string">
+  The element's visible frame expressed as `[left,top][right,bottom]`. Example: `'[0,0][100,100]'`
+</ResponseField>
+
+<ResponseField name="displayed" type="string">
+  Whether the element is visible to the user. Example: `'true'`
+</ResponseField>
+
+<ResponseField name="contentSize" type="string">
+  The dimensions of the element's content area as a JSON object with `left`, `top`, `width`, `height`, `scrollableOffset`, and `touchPadding` fields.
+
+  Example: `'{"left":0,"top":0,"width":100,"height":100,"scrollableOffset":10,"touchPadding":0}'`
+
+  <Note>
+    Collecting this attribute requires the `trackScrollEvents` setting to be enabled (default: `true`).
+  </Note>
+</ResponseField>
+
+---
+
+## Selection attributes
+
+<ResponseField name="selection-start" type="string">
+  The character index where the current text selection starts. May be `null` if the element provides no range info. Example: `'5'`
+</ResponseField>
+
+<ResponseField name="selection-end" type="string">
+  The character index where the current text selection ends. May be `null` if the element provides no range info. Example: `'8'`
+</ResponseField>
+
+---
+
+## Accessibility attributes
+
+<ResponseField name="a11y-important" type="string">
+  Whether the element originates from a view considered important for accessibility. Available on API 24+. Example: `'true'`
+</ResponseField>
+
+<ResponseField name="screen-reader-focusable" type="string">
+  Whether the element is explicitly marked as a focusable unit by a screen reader. Available on API 28+. Example: `'true'`
+</ResponseField>
+
+<ResponseField name="a11y-focused" type="string">
+  Whether the element currently has accessibility focus. Example: `'true'`
+</ResponseField>
+
+<ResponseField name="heading" type="string">
+  Whether the element represents a heading. Available on API 28+. Example: `'true'`
+</ResponseField>
+
+<ResponseField name="live-region" type="string">
+  Bitmask representing the live region mode for the element. For example, `'1'` corresponds to [`ACCESSIBILITY_LIVE_REGION_POLITE`](https://developer.android.com/reference/android/view/View#ACCESSIBILITY_LIVE_REGION_POLITE). Example: `'1'`
+</ResponseField>
+
+<ResponseField name="pane-title" type="string">
+  The title of the pane represented by this element. Available on API 28+. Example: `'text string'`
+</ResponseField>
+
+<ResponseField name="tooltip-text" type="string">
+  The result of [`getTooltipText()`](https://developer.android.com/reference/android/view/accessibility/AccessibilityNodeInfo#getTooltipText()). May be `null`. Available on API 28+. Example: `'Paste'`
+</ResponseField>
+
+<ResponseField name="window-id" type="string">
+  The integer identifier of the [accessibility window](https://developer.android.com/reference/android/view/accessibility/AccessibilityWindowInfo) this element belongs to. May be absent in rare cases. Example: `'123'`
+</ResponseField>
+
+<ResponseField name="actions" type="string">
+  Comma-separated names of available accessibility actions from [`getActionList()`](https://developer.android.com/reference/android/view/accessibility/AccessibilityNodeInfo#getActionList()).
+
+  Example: `'ACTION_FOCUS,ACTION_SELECT,ACTION_CLEAR_SELECTION,ACTION_CLICK,...'`
+
+  <Note>
+    Only available when the `includeA11yActionsInPageSource` setting is enabled.
+  </Note>
+</ResponseField>
+
+<ResponseField name="extras" type="string">
+  The result of [`getExtras()`](https://developer.android.com/reference/android/view/accessibility/AccessibilityNodeInfo#getExtras()), formatted as `key=value` pairs separated by semicolons (`;`). Empty values appear as `key=`.
+
+  Example: `'AccessibilityNodeInfo.roleDescription=;AccessibilityNodeInfo.chromeRole=rootWebArea;'`
+
+  <Note>
+    Only available when the `includeExtrasInPageSource` setting is enabled. The value can be large for some elements and may affect page source generation performance.
+  </Note>
+</ResponseField>
+
+---
+
+## Text input attributes
+
+<ResponseField name="input-type" type="string">
+  Bitmask representing the input type of an editable text element, as defined by [`InputType`](https://developer.android.com/reference/android/text/InputType). Only available on text input fields. Example: `'1'`
+</ResponseField>
+
+<ResponseField name="multiline" type="string">
+  Whether the element is a multi-line editable text field. Only available on text input fields. Example: `'true'`
+</ResponseField>
+
+<ResponseField name="max-text-length" type="string">
+  The maximum allowed text length for an editable text field. Only available on text input fields. Example: `'300'`
+</ResponseField>
+
+<ResponseField name="showing-hint" type="string">
+  Whether the element's text currently represents a hint for the user to enter text. Available on API 26+. Example: `'true'`
+</ResponseField>
+
+<ResponseField name="text-entry-key" type="string">
+  Whether the element represents a text entry key that is part of a keyboard or keypad. Available on API 29+. Example: `'true'`
+</ResponseField>
+
+<ResponseField name="text-has-clickable-span" type="string">
+  Whether the `TextView` content contains `ClickableSpan` or `URLSpan` elements. `null` for all other element types. Example: `'true'`
+</ResponseField>
+
+---
+
+## State attributes
+
+<ResponseField name="dismissable" type="string">
+  Whether the element can be dismissed. Example: `'true'`
+</ResponseField>
+
+<ResponseField name="content-invalid" type="string">
+  Whether the content of this element is considered invalid (for example, a malformed date). Example: `'true'`
+</ResponseField>
+
+<ResponseField name="error" type="string">
+  The error text associated with the element. Example: `'text string'`
+</ResponseField>
+
+<ResponseField name="context-clickable" type="string">
+  Whether the element supports a context-click action. Available on API 23+. Example: `'true'`
+</ResponseField>
+
+<ResponseField name="drawing-order" type="string">
+  The drawing position of the element relative to its siblings. Available on API 24+. Example: `'3'`
+</ResponseField>

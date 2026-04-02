@@ -1,0 +1,133 @@
+---
+title: "Activity startup"
+description: "Troubleshoot and configure Android activity startup in automated tests"
+---
+
+Appium starts Android applications by invoking the Activity Manager (`am start`) and then waiting for the expected activity to become focused. Understanding how this process works helps you diagnose startup failures and configure the right capabilities.
+
+## Required capabilities
+
+Appium needs to know the package name and activity name of the application under test. Provide them through the following capabilities:
+
+| Capability | Description |
+| --- | --- |
+| `appium:appPackage` | The application's package identifier (e.g. `com.example.app`). |
+| `appium:appActivity` | The name of the main activity to launch (e.g. `.MainActivity`). |
+| `appium:appWaitPackage` | The package Appium waits for after startup. Defaults to `appPackage`. |
+| `appium:appWaitActivity` | The activity Appium waits to become focused. Defaults to `appActivity`. |
+| `appium:appWaitDuration` | Maximum milliseconds to wait for `appWaitActivity` to be focused. Default: `20000` ms. |
+| `appium:appWaitForLaunch` | When `true` (default), blocks until Activity Manager returns control. Set to `false` to continue immediately after `am start`. |
+
+### Auto-detection
+
+All of these capabilities are optional when you provide an `app` path. Appium reads the APK manifest to detect `appPackage` and `appActivity` automatically via the `packageAndLaunchActivityFromManifest` method in [appium-adb](https://github.com/appium/appium-adb).
+
+<Warning>
+  If the app is already installed and you set `noReset: true`, no APK is available for inspection. In this case `appActivity` and `appPackage` **must** be set explicitly, since Appium cannot read the manifest.
+</Warning>
+
+## How Appium starts an activity
+
+<Steps>
+  <Step title="Issue am start">
+    Appium runs a command equivalent to:
+    ```bash
+    adb shell am start -W -n com.example.app/.MainActivity \
+      -S -a android.intent.action.MAIN \
+      -c android.intent.category.LAUNCHER \
+      -f 0x10200000
+    ```
+    The `-W` flag causes `am` to wait until the activity reports it has started.
+  </Step>
+  <Step title="Poll for focused activity">
+    Appium reads `adb shell dumpsys window windows` and checks the `mFocusedApp` / `mCurrentFocus` entries until the value matches `appWaitPackage`/`appWaitActivity`, or `appWaitDuration` expires.
+  </Step>
+  <Step title="Hand control to the test">
+    Once the waited activity is focused, the session startup completes and your test code runs.
+  </Step>
+</Steps>
+
+## Common problems and solutions
+
+<AccordionGroup>
+  <Accordion title="java.lang.SecurityException: Permission Denial: starting Intent">
+    This error usually means the `appPackage`/`appActivity` combination is incorrect or the activity is not exported.
+
+    Verify the correct values by running the `am start` command manually:
+
+    ```bash
+    adb shell am start -W -n com.example.app/.MainActivity \
+      -S -a android.intent.action.MAIN \
+      -c android.intent.category.LAUNCHER \
+      -f 0x10200000
+    ```
+
+    If this command succeeds locally, Appium will also succeed. If it fails, check the correct activity name with the app developer.
+
+    On some devices (notably Realme), developer options may require enabling **Disable Permission Monitoring** to avoid this error.
+  </Accordion>
+
+  <Accordion title="com.myactivity or com.myapp.com.myactivity never started">
+    This exception means that the activity which actually becomes focused first is different from the one configured in `appWaitActivity`.
+
+    This is common in apps with a splash screen or an initialisation activity. Use `adb shell dumpsys window windows` to see which activity gains focus during startup, then set `appWaitActivity` to that value.
+
+    Wildcards are supported. For example, `com.example.*` matches any activity in the `com.example` package:
+
+    ```json
+    {
+      "appium:appWaitActivity": "com.example.*"
+    }
+    ```
+  </Accordion>
+
+  <Accordion title="Command timed out after X ms">
+    If the activity names are correct but startup still times out, increase `appWaitDuration`:
+
+    ```json
+    {
+      "appium:appWaitDuration": 60000
+    }
+    ```
+
+    If the activity never returns control to `am start` at all (the call blocks indefinitely), set `appWaitForLaunch` to `false`. This unblocks Appium immediately after issuing the start command, but your test code must then verify the initial UI state independently.
+
+    ```json
+    {
+      "appium:appWaitForLaunch": false
+    }
+    ```
+  </Accordion>
+
+  <Accordion title="FirebaseInstallationsException on startup">
+    Firebase sends the APK certificate in the `X-Android-Cert` header during initialization. Because Appium re-signs apps with its own debug certificate, the certificate mismatch causes Firebase to throw `java.util.concurrent.ExecutionException: com.google.firebase.installations.FirebaseInstallationsException`.
+
+    Disable re-signing with:
+
+    ```json
+    {
+      "appium:noSign": true
+    }
+    ```
+
+    See [Unblocking Firebase Network Traffic in Modified Android Applications](https://www.thecobraden.com/posts/unblocking_firebase_ids/) for the full explanation.
+  </Accordion>
+</AccordionGroup>
+
+## Using mobile: startActivity for more control
+
+The `mobile: startActivity` command provides finer-grained control over how activities are started and allows passing custom intent flags, actions, and extras without needing separate capabilities for each.
+
+```python Python
+driver.execute_script('mobile: startActivity', {
+    'intent': 'com.example.app/.SettingsActivity',
+    'action': 'android.intent.action.VIEW',
+    'flags': '0x10200000',
+    'optionalIntentArguments': '--es extra_key extra_value'
+})
+```
+
+Use `mobile: startActivity` when:
+- You need to start a non-launcher activity mid-session.
+- You need custom intent extras or categories not covered by the standard capabilities.
+- You want to avoid modifying session-level capabilities between runs.

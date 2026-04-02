@@ -1,0 +1,96 @@
+---
+title: "Requirements"
+description: "System prerequisites for using the Appium UiAutomator2 Driver"
+---
+
+Before running tests with the UiAutomator2 driver, make sure your host machine and target device meet the requirements below.
+
+<Note>
+  You can validate your environment automatically by running `appium driver doctor uiautomator2` after installing the driver.
+</Note>
+
+## Host machine
+
+The driver supports the following host operating systems:
+
+- Windows
+- Linux
+- macOS
+
+## Node.js and npm
+
+| Requirement | Version |
+| --- | --- |
+| Node.js | `^20.19.0 \|\| ^22.12.0 \|\| >=24.0.0` |
+| npm | `>=10` |
+
+## Appium
+
+The driver requires **Appium 3**. It is declared as a peer dependency (`appium ^3.0.0-rc.2`) and is not compatible with Appium 2 or earlier.
+
+```bash
+npm install -g appium
+```
+
+## Android SDK
+
+[Android SDK Platform Tools](https://developer.android.com/studio/releases/platform-tools) must be installed on the host machine. This provides `adb`, which the driver uses for device communication. [Android Studio](https://developer.android.com/studio) includes a UI for installing and managing platform tools.
+
+## Java JDK
+
+A Java JDK must be installed. The required version depends on the Android API level you are targeting:
+
+| Android API level | Required Java version |
+| --- | --- |
+| Below 30 | Java 8 |
+| 30 and above | Java 9 or newer |
+
+## Environment variables
+
+The following environment variables must be set on the host machine:
+
+| Variable | Description |
+| --- | --- |
+| `ANDROID_HOME` or `ANDROID_SDK_ROOT` | Path to the root of the Android SDK installation |
+| `JAVA_HOME` | Path to the root of the JDK installation |
+
+Example (Linux/macOS):
+
+```bash
+export ANDROID_HOME=$HOME/Library/Android/sdk
+export ANDROID_SDK_ROOT=$ANDROID_HOME
+export JAVA_HOME=$(/usr/libexec/java_home)
+export PATH=$ANDROID_HOME/platform-tools:$PATH
+```
+
+## Minimum Android API level
+
+Since driver version 6.0.0, the minimum supported Android API level is **26 (Android 8 / Oreo)**.
+
+<Warning>
+  Driver versions before 6.0.0 supported Android API level 21 (Android 5), but version 6.0.0+ is strongly recommended as earlier driver versions have known compatibility issues.
+</Warning>
+
+## Real devices
+
+To run tests on a physical Android device:
+
+1. Enable [USB debugging](https://developer.android.com/studio/debug/dev-options) in the device's developer options.
+2. Connect the device via USB.
+3. Verify the device is visible and online:
+
+   ```bash
+   adb devices -l
+   ```
+
+   The device must appear with the status `device` (not `unauthorized` or `offline`).
+
+## Emulators
+
+To run tests on an Android Virtual Device (AVD):
+
+1. Install the target platform image via Android Studio's AVD Manager or `avdmanager`.
+2. Create an AVD for the desired API level and device profile.
+3. Launch the emulator and confirm it appears in `adb devices -l` before starting a test session.
+
+The driver can also launch a named emulator automatically if you provide the `appium:avd` capability in your session configuration.

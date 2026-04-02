@@ -1,0 +1,515 @@
+---
+title: "Capability sets"
+description: "Pre-built capability configurations for common Android test scenarios"
+---
+
+This page lists the minimum capability sets required for common automation scenarios. For the full list of available options, see the [Capabilities](/capabilities/general) reference.
+
+<Note>
+  Always set `appium:udid` when running tests on real devices and `appium:avd` for emulators. Omitting these in multi-device environments may cause the driver to target the wrong device.
+</Note>
+
+---
+
+## Application file (real device)
+
+Install and launch an APK on a connected real device.
+
+<Tabs>
+  <Tab title="Python">
+    ```python
+    options = {
+        'platformName': 'Android',
+        'appium:automationName': 'UiAutomator2',
+        'appium:platformVersion': '<Android_Version>',
+        'appium:udid': '<Phone_ID>',
+        'appium:app': '/path/to/local/package.apk',
+    }
+    ```
+  </Tab>
+  <Tab title="Java">
+    ```java
+    UiAutomator2Options options = new UiAutomator2Options()
+        .setPlatformVersion("<Android_Version>")
+        .setUdid("<Phone_ID>")
+        .setApp("/path/to/local/package.apk");
+    ```
+  </Tab>
+  <Tab title="JavaScript">
+    ```javascript
+    const options = {
+        platformName: 'Android',
+        'appium:automationName': 'UiAutomator2',
+        'appium:platformVersion': '<Android_Version>',
+        'appium:udid': '<Phone_ID>',
+        'appium:app': '/path/to/local/package.apk',
+    };
+    ```
+  </Tab>
+</Tabs>
+
+`appium:app` also accepts a remote URL or a ZIP archive:
+
+```
+"appium:app": "https://example.com/package.apk"
+"appium:app": "https://example.com/package.zip"
+```
+
+<Note>
+  If the driver cannot autodetect the app's package and activity from the manifest, set `appium:appPackage` and `appium:appActivity` explicitly. See [How to troubleshoot activity startup](/guides/activity-startup) for details.
+</Note>
+
+---
+
+## Application file (emulator)
+
+Start an emulator by name and install an APK.
+
+<Tabs>
+  <Tab title="Python">
+    ```python
+    options = {
+        'platformName': 'Android',
+        'appium:automationName': 'UiAutomator2',
+        'appium:avd': '<Emulator_Name>',
+        'appium:platformVersion': '<Android_Version>',
+        'appium:app': '/path/to/local/package.apk',
+    }
+    ```
+  </Tab>
+  <Tab title="Java">
+    ```java
+    UiAutomator2Options options = new UiAutomator2Options()
+        .setAvd("<Emulator_Name>")
+        .setPlatformVersion("<Android_Version>")
+        .setApp("/path/to/local/package.apk");
+    ```
+  </Tab>
+  <Tab title="JavaScript">
+    ```javascript
+    const options = {
+        platformName: 'Android',
+        'appium:automationName': 'UiAutomator2',
+        'appium:avd': '<Emulator_Name>',
+        'appium:platformVersion': '<Android_Version>',
+        'appium:app': '/path/to/local/package.apk',
+    };
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## Chrome browser (real device)
+
+Automate Chrome on a connected real device.
+
+<Tabs>
+  <Tab title="Python">
+    ```python
+    options = {
+        'platformName': 'Android',
+        'appium:automationName': 'UiAutomator2',
+        'browserName': 'Chrome',
+        'appium:platformVersion': '<Android_Version>',
+        'appium:udid': '<Phone_ID>',
+    }
+    ```
+  </Tab>
+  <Tab title="Java">
+    ```java
+    UiAutomator2Options options = new UiAutomator2Options()
+        .setPlatformVersion("<Android_Version>")
+        .setUdid("<Phone_ID>");
+    options.setCapability("browserName", "Chrome");
+    ```
+  </Tab>
+  <Tab title="JavaScript">
+    ```javascript
+    const options = {
+        platformName: 'Android',
+        'appium:automationName': 'UiAutomator2',
+        browserName: 'Chrome',
+        'appium:platformVersion': '<Android_Version>',
+        'appium:udid': '<Phone_ID>',
+    };
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## Chrome browser (emulator)
+
+Automate Chrome on an emulator.
+
+<Tabs>
+  <Tab title="Python">
+    ```python
+    options = {
+        'platformName': 'Android',
+        'appium:automationName': 'UiAutomator2',
+        'browserName': 'Chrome',
+        'appium:avd': '<Emulator_Name>',
+        'appium:platformVersion': '<Android_Version>',
+    }
+    ```
+  </Tab>
+  <Tab title="Java">
+    ```java
+    UiAutomator2Options options = new UiAutomator2Options()
+        .setAvd("<Emulator_Name>")
+        .setPlatformVersion("<Android_Version>");
+    options.setCapability("browserName", "Chrome");
+    ```
+  </Tab>
+  <Tab title="JavaScript">
+    ```javascript
+    const options = {
+        platformName: 'Android',
+        'appium:automationName': 'UiAutomator2',
+        browserName: 'Chrome',
+        'appium:avd': '<Emulator_Name>',
+        'appium:platformVersion': '<Android_Version>',
+    };
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## Pre-installed app (real device)
+
+Test an app that is already installed on the device without reinstalling or resetting it.
+
+<Tabs>
+  <Tab title="Python">
+    ```python
+    options = {
+        'platformName': 'Android',
+        'appium:automationName': 'UiAutomator2',
+        'appium:platformVersion': '<Android_Version>',
+        'appium:udid': '<Phone_ID>',
+        'appium:appPackage': '<App_Package_Id>',
+        'appium:appActivity': '<App_Activity_Id>',
+        'appium:noReset': True,
+    }
+    ```
+  </Tab>
+  <Tab title="Java">
+    ```java
+    UiAutomator2Options options = new UiAutomator2Options()
+        .setPlatformVersion("<Android_Version>")
+        .setUdid("<Phone_ID>")
+        .setAppPackage("<App_Package_Id>")
+        .setAppActivity("<App_Activity_Id>")
+        .setNoReset(true);
+    ```
+  </Tab>
+  <Tab title="JavaScript">
+    ```javascript
+    const options = {
+        platformName: 'Android',
+        'appium:automationName': 'UiAutomator2',
+        'appium:platformVersion': '<Android_Version>',
+        'appium:udid': '<Phone_ID>',
+        'appium:appPackage': '<App_Package_Id>',
+        'appium:appActivity': '<App_Activity_Id>',
+        'appium:noReset': true,
+    };
+    ```
+  </Tab>
+</Tabs>
+
+`appium:noReset` tells the driver the app is already installed and must not be reset before the session starts.
+
+---
+
+## Pre-installed app (emulator)
+
+<Tabs>
+  <Tab title="Python">
+    ```python
+    options = {
+        'platformName': 'Android',
+        'appium:automationName': 'UiAutomator2',
+        'appium:avd': '<Emulator_Name>',
+        'appium:platformVersion': '<Android_Version>',
+        'appium:appPackage': '<App_Package_Id>',
+        'appium:appActivity': '<App_Activity_Id>',
+        'appium:noReset': True,
+    }
+    ```
+  </Tab>
+  <Tab title="Java">
+    ```java
+    UiAutomator2Options options = new UiAutomator2Options()
+        .setAvd("<Emulator_Name>")
+        .setPlatformVersion("<Android_Version>")
+        .setAppPackage("<App_Package_Id>")
+        .setAppActivity("<App_Activity_Id>")
+        .setNoReset(true);
+    ```
+  </Tab>
+  <Tab title="JavaScript">
+    ```javascript
+    const options = {
+        platformName: 'Android',
+        'appium:automationName': 'UiAutomator2',
+        'appium:avd': '<Emulator_Name>',
+        'appium:platformVersion': '<Android_Version>',
+        'appium:appPackage': '<App_Package_Id>',
+        'appium:appActivity': '<App_Activity_Id>',
+        'appium:noReset': true,
+    };
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## Custom launch (no app)
+
+Start a session at the home screen without launching a specific app. Use `mobile:` execute methods to manage app lifecycle after session start.
+
+<Tabs>
+  <Tab title="Python">
+    ```python
+    # Real device
+    options = {
+        'platformName': 'Android',
+        'appium:automationName': 'UiAutomator2',
+        'appium:platformVersion': '<Android_Version>',
+        'appium:udid': '<Phone_ID>',
+    }
+
+    # Emulator
+    options = {
+        'platformName': 'Android',
+        'appium:automationName': 'UiAutomator2',
+        'appium:avd': '<Emulator_Name>',
+        'appium:platformVersion': '<Android_Version>',
+    }
+    ```
+  </Tab>
+  <Tab title="Java">
+    ```java
+    // Real device
+    UiAutomator2Options options = new UiAutomator2Options()
+        .setPlatformVersion("<Android_Version>")
+        .setUdid("<Phone_ID>");
+
+    // Emulator
+    UiAutomator2Options options = new UiAutomator2Options()
+        .setAvd("<Emulator_Name>")
+        .setPlatformVersion("<Android_Version>");
+    ```
+  </Tab>
+  <Tab title="JavaScript">
+    ```javascript
+    // Real device
+    const options = {
+        platformName: 'Android',
+        'appium:automationName': 'UiAutomator2',
+        'appium:platformVersion': '<Android_Version>',
+        'appium:udid': '<Phone_ID>',
+    };
+
+    // Emulator
+    const options = {
+        platformName: 'Android',
+        'appium:automationName': 'UiAutomator2',
+        'appium:avd': '<Emulator_Name>',
+        'appium:platformVersion': '<Android_Version>',
+    };
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## Parallel tests
+
+When running multiple simultaneous sessions, assign unique port values per session to prevent conflicts. See the [parallel tests guide](/guides/parallel-tests) for a full walkthrough.
+
+<Warning>
+  Always set `appium:udid`, `appium:systemPort`, `appium:chromedriverPort`, and `appium:mjpegServerPort` to unique values for each parallel session.
+</Warning>
+
+<Tabs>
+  <Tab title="Python">
+    ```python
+    # Session 1
+    options_1 = {
+        'platformName': 'Android',
+        'appium:automationName': 'UiAutomator2',
+        'appium:udid': '<device-udid-1>',
+        'appium:app': '/path/to/app.apk',
+        'appium:systemPort': 8201,
+        'appium:chromedriverPort': 9515,
+        'appium:mjpegServerPort': 7811,
+    }
+
+    # Session 2
+    options_2 = {
+        'platformName': 'Android',
+        'appium:automationName': 'UiAutomator2',
+        'appium:udid': '<device-udid-2>',
+        'appium:app': '/path/to/app.apk',
+        'appium:systemPort': 8202,
+        'appium:chromedriverPort': 9516,
+        'appium:mjpegServerPort': 7812,
+    }
+    ```
+  </Tab>
+  <Tab title="Java">
+    ```java
+    // Session 1
+    UiAutomator2Options options1 = new UiAutomator2Options()
+        .setUdid("<device-udid-1>")
+        .setApp("/path/to/app.apk")
+        .setSystemPort(8201)
+        .setChromedriverPort(9515);
+    options1.setCapability("appium:mjpegServerPort", 7811);
+
+    // Session 2
+    UiAutomator2Options options2 = new UiAutomator2Options()
+        .setUdid("<device-udid-2>")
+        .setApp("/path/to/app.apk")
+        .setSystemPort(8202)
+        .setChromedriverPort(9516);
+    options2.setCapability("appium:mjpegServerPort", 7812);
+    ```
+  </Tab>
+  <Tab title="JavaScript">
+    ```javascript
+    // Session 1
+    const options1 = {
+        platformName: 'Android',
+        'appium:automationName': 'UiAutomator2',
+        'appium:udid': '<device-udid-1>',
+        'appium:app': '/path/to/app.apk',
+        'appium:systemPort': 8201,
+        'appium:chromedriverPort': 9515,
+        'appium:mjpegServerPort': 7811,
+    };
+
+    // Session 2
+    const options2 = {
+        platformName: 'Android',
+        'appium:automationName': 'UiAutomator2',
+        'appium:udid': '<device-udid-2>',
+        'appium:app': '/path/to/app.apk',
+        'appium:systemPort': 8202,
+        'appium:chromedriverPort': 9516,
+        'appium:mjpegServerPort': 7812,
+    };
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## CI/CD optimized session
+
+Skip initialization steps that are unnecessary when the device is already prepared. Useful for reducing session startup time in CI environments.
+
+<Tabs>
+  <Tab title="Python">
+    ```python
+    options = {
+        'platformName': 'Android',
+        'appium:automationName': 'UiAutomator2',
+        'appium:udid': '<Phone_ID>',
+        'appium:app': '/path/to/app.apk',
+        'appium:skipUnlock': True,
+        'appium:skipDeviceInitialization': True,
+        'appium:skipServerInstallation': True,  # Only if server already installed
+        'appium:autoGrantPermissions': True,
+        'appium:noReset': True,
+    }
+    ```
+  </Tab>
+  <Tab title="Java">
+    ```java
+    UiAutomator2Options options = new UiAutomator2Options()
+        .setUdid("<Phone_ID>")
+        .setApp("/path/to/app.apk")
+        .setSkipUnlock(true)
+        .setSkipDeviceInitialization(true)
+        .setSkipServerInstallation(true) // Only if server already installed
+        .setAutoGrantPermissions(true)
+        .setNoReset(true);
+    ```
+  </Tab>
+  <Tab title="JavaScript">
+    ```javascript
+    const options = {
+        platformName: 'Android',
+        'appium:automationName': 'UiAutomator2',
+        'appium:udid': '<Phone_ID>',
+        'appium:app': '/path/to/app.apk',
+        'appium:skipUnlock': true,
+        'appium:skipDeviceInitialization': true,
+        'appium:skipServerInstallation': true, // Only if server already installed
+        'appium:autoGrantPermissions': true,
+        'appium:noReset': true,
+    };
+    ```
+  </Tab>
+</Tabs>
+
+<Warning>
+  Only set `appium:skipServerInstallation` to `true` if you are certain the correct UiAutomator2 server version is already installed on the device. Skipping installation with an outdated server may cause unexpected failures.
+</Warning>
+
+---
+
+## App with custom keystore signing
+
+Use when the UiAutomator2 server APK needs to be signed with the same keystore as the app under test.
+
+<Tabs>
+  <Tab title="Python">
+    ```python
+    options = {
+        'platformName': 'Android',
+        'appium:automationName': 'UiAutomator2',
+        'appium:udid': '<Phone_ID>',
+        'appium:app': '/path/to/app.apk',
+        'appium:useKeystore': True,
+        'appium:keystorePath': '/path/to/keystore.jks',
+        'appium:keystorePassword': 'keystore_password',
+        'appium:keyAlias': 'key_alias',
+        'appium:keyPassword': 'key_password',
+    }
+    ```
+  </Tab>
+  <Tab title="Java">
+    ```java
+    UiAutomator2Options options = new UiAutomator2Options()
+        .setUdid("<Phone_ID>")
+        .setApp("/path/to/app.apk")
+        .setUseKeystore(true)
+        .setKeystorePath("/path/to/keystore.jks")
+        .setKeystorePassword("keystore_password")
+        .setKeyAlias("key_alias")
+        .setKeyPassword("key_password");
+    ```
+  </Tab>
+  <Tab title="JavaScript">
+    ```javascript
+    const options = {
+        platformName: 'Android',
+        'appium:automationName': 'UiAutomator2',
+        'appium:udid': '<Phone_ID>',
+        'appium:app': '/path/to/app.apk',
+        'appium:useKeystore': true,
+        'appium:keystorePath': '/path/to/keystore.jks',
+        'appium:keystorePassword': 'keystore_password',
+        'appium:keyAlias': 'key_alias',
+        'appium:keyPassword': 'key_password',
+    };
+    ```
+  </Tab>
+</Tabs>

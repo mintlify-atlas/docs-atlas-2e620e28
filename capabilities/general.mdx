@@ -1,0 +1,84 @@
+---
+title: "General Capabilities"
+description: "Core session configuration capabilities for the UiAutomator2 driver"
+---
+
+## Session
+
+<ParamField path="platformName" type="string">
+  The platform under test. Can be set to `android`. Appium itself is not strict about this value if `appium:automationName` is provided, so you can assign it to any supported platform name if needed (e.g. to make Selenium Grid work).
+</ParamField>
+
+<ParamField path="appium:automationName" type="string" required>
+  Must always be set to `uiautomator2`. Values are compared case-insensitively.
+</ParamField>
+
+<ParamField path="appium:deviceName" type="string">
+  The name of the device under test. This value is not used to select a device. Prefer setting `appium:udid` for real devices and `appium:avd` for emulators instead.
+</ParamField>
+
+<ParamField path="appium:platformVersion" type="string">
+  The platform version of an emulator or a real device. Used for device autodetection when `appium:udid` is not provided.
+</ParamField>
+
+<ParamField path="appium:udid" type="string">
+  UDID of the device to be tested. Can be retrieved from `adb devices -l` output. If unset, the driver uses the first connected device.
+
+  <Warning>
+    Always set this capability when running parallel tests to avoid targeting the wrong device.
+  </Warning>
+</ParamField>
+
+<ParamField path="appium:noReset" type="boolean" default="false">
+  When `true`, prevents the device from being reset before session startup. The application under test will not be terminated and its data will not be cleaned.
+</ParamField>
+
+<ParamField path="appium:fullReset" type="boolean" default="false">
+  When `true`, always enforces the application under test to be fully uninstalled before starting a new session.
+</ParamField>
+
+<ParamField path="appium:printPageSourceOnFindFailure" type="boolean" default="false">
+  When `true`, the server dumps the actual XML page source into the log whenever an error occurs during element lookup.
+</ParamField>
+
+## Driver/Server
+
+<ParamField path="appium:systemPort" type="number" default="8200–8299">
+  The port on the host machine used for the UiAutomator2 server. By default, the first free port in the `8200..8299` range is selected.
+
+  <Tip>
+    Set this explicitly when running parallel tests on the same machine to avoid port conflicts.
+  </Tip>
+</ParamField>
+
+<ParamField path="appium:skipServerInstallation" type="boolean" default="false">
+  When `true`, skips installation of the UiAutomator2 server component on the device and all related checks. Useful for speeding up session startup when you know the correct server version is already installed.
+
+  <Warning>
+    If the server is not installed or the wrong version is present, you may encounter unexpected errors later in the session.
+  </Warning>
+</ParamField>
+
+<ParamField path="appium:uiautomator2ServerLaunchTimeout" type="number" default="30000">
+  Maximum number of milliseconds to wait until UiAutomator2 server is listening on the device.
+</ParamField>
+
+<ParamField path="appium:uiautomator2ServerInstallTimeout" type="number" default="20000">
+  Maximum number of milliseconds to wait until UiAutomator2 server is installed on the device.
+</ParamField>
+
+<ParamField path="appium:uiautomator2ServerReadTimeout" type="number" default="240000">
+  Maximum number of milliseconds to wait for an HTTP response from UiAutomator2 server. Only values greater than zero are accepted.
+
+  <Warning>
+    Setting this value too low will cause driver commands to fail with a `timeout of Xms exceeded` error.
+  </Warning>
+</ParamField>
+
+<ParamField path="appium:disableWindowAnimation" type="boolean" default="false">
+  When `true`, disables window animations when starting the instrumentation process. On API level 26 and higher, animation scale is restored automatically after the instrumentation process ends. On API level 25 and lower, animation scale may remain disabled if the session ends unexpectedly.
+</ParamField>
+
+<ParamField path="appium:skipDeviceInitialization" type="boolean" default="false">
+  When `true`, device startup checks (whether the device is ready and whether the Settings app is installed) are skipped on session creation. Can speed up session startup if you know the device is already in a ready state.
+</ParamField>

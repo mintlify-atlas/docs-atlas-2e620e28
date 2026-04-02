@@ -1,0 +1,140 @@
+{
+  "projectType": "framework",
+  "projectName": "Appium UiAutomator2 Driver",
+  "projectDescription": "An Appium driver for automating native, hybrid, and mobile web apps on Android devices using Google's UiAutomator2 framework.",
+  "theme": "palm",
+  "primaryColor": "#94cb04",
+  "lightColor": "#545454",
+  "darkColor": null,
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Get Started",
+            "pages": [
+              "introduction",
+              "quickstart",
+              "requirements"
+            ]
+          },
+          {
+            "group": "Capabilities",
+            "pages": [
+              "capabilities/general",
+              "capabilities/app",
+              "capabilities/device",
+              "capabilities/web-context"
+            ]
+          },
+          {
+            "group": "Guides",
+            "pages": [
+              "guides/element-finding",
+              "guides/gestures",
+              "guides/hybrid-apps",
+              "guides/parallel-tests",
+              "guides/activity-startup",
+              "guides/unlock"
+            ]
+          },
+          {
+            "group": "Advanced",
+            "pages": [
+              "advanced/settings",
+              "advanced/bidi-protocol",
+              "advanced/mjpeg",
+              "advanced/multi-window"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "API Reference",
+        "groups": [
+          {
+            "group": "Mobile Commands",
+            "pages": [
+              "api/app-management",
+              "api/gestures",
+              "api/device",
+              "api/file-transfer",
+              "api/screen-recording"
+            ]
+          },
+          {
+            "group": "Reference",
+            "pages": [
+              "api/element-attributes",
+              "api/settings-reference",
+              "api/capability-sets"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "W3C WebDriver protocol compliance with Android-specific extensions",
+    "Supports native, hybrid, and mobile web app automation",
+    "Rich element location strategies including UiAutomator selectors, XPath, and accessibility IDs",
+    "Mobile gesture automation (swipe, pinch, fling, scroll, drag)",
+    "Parallel test execution support for real devices and emulators",
+    "BiDi protocol support for log streaming and context events",
+    "MJPEG screen streaming for real-time device screenshots",
+    "App management commands (install, uninstall, permissions, activities)",
+    "Multi-window and multi-display testing support",
+    "Emulator control (sensor emulation, console commands, camera injection)"
+  ],
+  "publicApiSurface": [
+    "AndroidUiautomator2Driver",
+    "mobile: shell",
+    "mobile: startActivity",
+    "mobile: installApp",
+    "mobile: removeApp",
+    "mobile: activateApp",
+    "mobile: terminateApp",
+    "mobile: clearApp",
+    "mobile: queryAppState",
+    "mobile: isAppInstalled",
+    "mobile: listApps",
+    "mobile: changePermissions",
+    "mobile: getPermissions",
+    "mobile: dragGesture",
+    "mobile: swipeGesture",
+    "mobile: scrollGesture",
+    "mobile: flingGesture",
+    "mobile: pinchCloseGesture",
+    "mobile: pinchOpenGesture",
+    "mobile: clickGesture",
+    "mobile: longClickGesture",
+    "mobile: doubleClickGesture",
+    "mobile: scroll",
+    "mobile: deepLink",
+    "mobile: batteryInfo",
+    "mobile: deviceInfo",
+    "mobile: getDeviceTime",
+    "mobile: pullFile",
+    "mobile: pushFile",
+    "mobile: pullFolder",
+    "mobile: deleteFile",
+    "mobile: getNotifications",
+    "mobile: listSms",
+    "mobile: type",
+    "mobile: performEditorAction",
+    "mobile: startScreenStreaming",
+    "mobile: stopScreenStreaming",
+    "mobile: sensorSet",
+    "mobile: execEmuConsoleCommand",
+    "mobile: startLogsBroadcast",
+    "mobile: stopLogsBroadcast",
+    "mobile: acceptAlert",
+    "mobile: dismissAlert",
+    "mobile: listWindows",
+    "mobile: listDisplays",
+    "mobile: deviceidle",
+    "mobile: resetAccessibilityCache",
+    "Settings API"
+  ]
+}

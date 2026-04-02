@@ -1,0 +1,353 @@
+---
+title: "Multi-window testing"
+description: "Test Android apps with multiple windows, displays, and picture-in-picture modes"
+---
+
+Android applications can display multiple windows simultaneously. The UiAutomator2 driver provides settings and commands to locate elements and take screenshots across these windows and displays.
+
+## Concepts
+
+### Windows
+
+A **window** is a container for UI elements owned by an application. Each window has:
+
+- A unique `windowId` identifier.
+- A `packageName` identifying the owning application.
+- Bounds (`rect`) defining its position and size on screen.
+- A Z-order (`layer`) determining which window appears on top.
+- A `type` indicating the window kind (application, input method, system, etc.).
+- A `title` (may be null).
+- A `physicalDisplayId` (physical display identifier, returned as a string; may be null).
+- A `virtualDisplayId` (virtual display identifier; only set for virtual displays).
+- State flags: `isActive`, `isFocused`, `isAccessibilityFocused`, `isInPictureInPictureMode`.
+
+Multi-window scenarios include:
+
+- **Split-screen mode** — two applications running side-by-side.
+- **Picture-in-picture (PiP)** — a floating video window over other content.
+- **Freeform windows** — desktop-like windowed applications on supported devices.
+- **System windows** — on-screen keyboards, system dialogs, and notification panels.
+- **Overlay windows** — floating action buttons, tooltips, and other overlays.
+
+### Displays
+
+A **display** (logical display) is a virtual screen that can contain multiple windows. Each display has:
+
+- A `displayId` (typically `0` for the default display).
+- A `name` (may be null).
+- A `physicalId` mapping to the actual hardware display.
+- A `virtualId` (only set for virtual displays).
+- Display metrics: width, height, density, DPI, and more.
+
+Additional displays may be created for external monitors (USB-C/HDMI), wireless displays, or virtual displays created by applications.
+
+<Note>Full multi-display support requires Android API 30 (Android R) or later. On earlier versions, only the default display (`displayId = 0`) is accessible.</Note>
+
+## Settings
+
+### `enableMultiWindows`
+
+**Type:** `boolean` — **Default:** `false`
+
+Controls whether multiple windows are included in the accessibility tree for element location and page source generation.
+
+<Tabs>
+  <Tab title="false (default)">
+    Only the active window's root node is used. Element lookups search only within that window. This is the fastest configuration and works for most apps.
+  </Tab>
+  <Tab title="true">
+    All accessible windows are included. Element lookups can find elements across all windows, including the on-screen keyboard, system dialogs, and overlay windows.
+  </Tab>
+</Tabs>
+
+```python python
+# Enable multi-window mode to find elements in the keyboard or other windows
+driver.update_settings({'enableMultiWindows': True})
+
+keyboard_key = driver.find_element('id', 'keyboard_key_a')
+```
+
+### `enableTopmostWindowFromActivePackage`
+
+**Type:** `boolean` — **Default:** `false`
+
+When `enableMultiWindows` is `false`, this setting determines which window from the active package is used.
+
+| Value | Behavior |
+|-------|----------|
+| `false` (default) | Uses `getRootInActiveWindow()` — the window that currently has input focus. |
+| `true` | Searches all windows from the active package and selects the one with the highest Z-order (topmost layer). |
+
+When `enableMultiWindows` is `true`, this setting is ignored.
+
+```python python
+driver.update_settings({'enableTopmostWindowFromActivePackage': True})
+element = driver.find_element('id', 'myButton')
+```
+
+### `currentDisplayId`
+
+**Type:** `int` — **Default:** `Display.DEFAULT_DISPLAY` — **Requires:** Android API 30+
+
+Sets the display used for element lookup, screenshots, and coordinate-based gestures (taps, swipes, drags). Set to `-1` to reset to the default display.
+
+```python python
+# Target elements and screenshots on display 1
+driver.update_settings({'currentDisplayId': 1})
+
+element = driver.find_element('id', 'myButton')
+screenshot = driver.get_screenshot_as_base64()
+
+# Reset to default
+driver.update_settings({'currentDisplayId': -1})
+```
+
+<Note>`currentDisplayId` only affects UiObject2-based locators (`id`, `accessibility id`, `className`). It has no effect on legacy `-android uiautomator` selectors.</Note>
+
+#### Interaction between settings
+
+The combination of `enableMultiWindows` and `currentDisplayId` determines which windows appear in the page source:
+
+| `enableMultiWindows` | `currentDisplayId` | Page source includes |
+|---------------------|-------------------|---------------------|
+| `false` | any | Active window only (or topmost if `enableTopmostWindowFromActivePackage` is `true`). |
+| `true` | not set | All accessible windows from all displays. |
+| `true` | set to a display | Only windows on the specified display. |
+
+XPath lookups follow the same window selection logic as page source generation.
+
+## `mobile: listWindows`
+
+Returns information about all windows currently available on the device.
+
+### Arguments
+
+| Argument | Type | Description |
+|----------|------|-------------|
+| `filters` | object | Filter criteria (see below). All specified filters are combined with AND logic. |
+| `skipScreenshots` | boolean | Skip taking per-window screenshots (Android API 34+) for better performance. Default: `false`. |
+
+### Filter fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `windowId` | integer | Match a specific window by ID. |
+| `packageName` | string | Match by package name. Supports glob patterns (e.g., `com.example.*`). |
+| `displayId` | integer | Match windows on a specific logical display. |
+| `physicalDisplayId` | string | Match windows on a specific physical display. |
+| `type` | integer | Match by window type (e.g., `1` for `TYPE_APPLICATION`, `2` for `TYPE_INPUT_METHOD`). |
+| `title` | string | Match by window title. Supports glob patterns (e.g., `My App*`). |
+| `layer` | integer | Match windows with a layer greater than or equal to this value. |
+| `isActive` | boolean | Match active/inactive windows. |
+| `isFocused` | boolean | Match focused/unfocused windows. |
+| `isInPictureInPictureMode` | boolean | Match windows in PiP mode. |
+
+### Return fields
+
+Each window object includes:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `windowId` | integer | Unique window identifier. |
+| `displayId` | integer | Logical display ID where this window resides. |
+| `physicalDisplayId` | string | Physical display identifier (may be null). |
+| `virtualDisplayId` | string | Virtual display identifier (only for virtual displays). |
+| `packageName` | string | Package name of the owning application. |
+| `type` | integer | Window type constant. |
+| `title` | string | Window title (may be null). |
+| `layer` | integer | Z-order. Higher values appear on top. |
+| `rect` | object | Window bounds: `{x, y, width, height}`. |
+| `isActive` | boolean | Whether this is the active window. |
+| `isFocused` | boolean | Whether this window has input focus. |
+| `isAccessibilityFocused` | boolean | Whether this window has accessibility focus. |
+| `isInPictureInPictureMode` | boolean | Whether this window is in PiP mode. |
+
+### Examples
+
+```python python
+# List all windows
+windows = driver.execute_script('mobile: listWindows')
+
+for window in windows:
+    print(f"Window {window['windowId']}: {window['packageName']}")
+    print(f"  Display: {window['displayId']}, Layer: {window['layer']}")
+    print(f"  Active: {window['isActive']}, Focused: {window['isFocused']}")
+    print(f"  Bounds: {window['rect']}")
+
+# Find windows from a specific package
+app_windows = driver.execute_script('mobile: listWindows', {
+    'filters': {'packageName': 'com.example.myapp'}
+})
+
+# Find PiP windows
+pip_windows = driver.execute_script('mobile: listWindows', {
+    'filters': {'isInPictureInPictureMode': True}
+})
+
+# Skip screenshots for faster results
+windows = driver.execute_script('mobile: listWindows', {
+    'skipScreenshots': True
+})
+
+# Combine filters (AND logic)
+windows = driver.execute_script('mobile: listWindows', {
+    'filters': {
+        'packageName': 'com.example.myapp',
+        'isActive': True
+    }
+})
+```
+
+## `mobile: listDisplays`
+
+Returns information about all displays available on the device, including both logical and physical display identifiers and detailed metrics.
+
+### Return fields
+
+Each display object includes:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | integer | Logical display ID. Use this with `currentDisplayId`. |
+| `name` | string | Display name (may be null). |
+| `physicalId` | string | Physical display identifier. Use this with `mobile: screenshots`. |
+| `virtualId` | string | Virtual display identifier (only for virtual displays). Use with `mobile: screenshots`. |
+| `isDefault` | boolean | Whether this is the default display. |
+| `metrics` | object | Display metrics (see below). |
+
+The `metrics` object includes: `widthPixels`, `heightPixels`, `density`, `densityDpi`, `xdpi`, `ydpi`.
+
+### Example
+
+```python python
+displays = driver.execute_script('mobile: listDisplays')
+
+for display in displays:
+    print(f"Display {display['id']}: {display['name']}")
+    print(f"  Physical ID: {display['physicalId']}")
+    print(f"  Default: {display['isDefault']}")
+    m = display['metrics']
+    print(f"  Size: {m['widthPixels']}x{m['heightPixels']} @ {m['densityDpi']} DPI")
+
+# Find the default display
+default = next(d for d in displays if d['isDefault'])
+print(f"Default display: {default['id']}")
+```
+
+## Locator strategy compatibility
+
+| Locator strategy | Multi-window support |
+|-----------------|---------------------|
+| `id` (resource ID) | Supported |
+| `accessibility id` | Supported |
+| `className` | Supported |
+| `xpath` | Supported (uses same window selection logic as page source) |
+| `-android uiautomator` | **Not supported** — searches only within the active window |
+
+Avoid the `-android uiautomator` strategy for multi-window scenarios. Use UiObject2-based locators instead.
+
+### Targeting elements by window with XPath
+
+When `enableMultiWindows` is `true` and `currentDisplayId` is not set, each element in the page source has a `window-id` attribute. You can use this in XPath to target a specific window:
+
+```python python
+driver.update_settings({'enableMultiWindows': True})
+
+# Get the window ID for your app
+windows = driver.execute_script('mobile: listWindows', {
+    'filters': {'packageName': 'com.example.myapp'}
+})
+target_window_id = windows[0]['windowId']
+
+# Find an element in that specific window
+element = driver.find_element(
+    'xpath',
+    f'//*[@window-id="{target_window_id}" and @text="My Button"]'
+)
+```
+
+<Note>The `window-id` attribute is only meaningful when multiple windows are included in the page source (i.e., `enableMultiWindows` is `true` and `currentDisplayId` is not set to a specific display).</Note>
+
+## Split-screen testing
+
+```python python
+from appium import webdriver
+from appium.options.android import UiAutomator2Options
+
+options = UiAutomator2Options()
+options.app_package = 'com.example.myapp'
+driver = webdriver.Remote('http://localhost:4723', options=options)
+
+# Include all windows in the page source
+driver.update_settings({'enableMultiWindows': True})
+
+# Check what windows are available
+windows = driver.execute_script('mobile: listWindows', {})
+print(f"Found {len(windows)} windows")
+
+# Find an element across all windows (including the second split-screen app)
+element = driver.find_element('id', 'com.example.myapp:id/myButton')
+```
+
+## Multi-display testing
+
+```python python
+# List available displays
+displays = driver.execute_script('mobile: listDisplays')
+
+# Switch to a secondary display
+driver.update_settings({'currentDisplayId': displays[1]['id']})
+
+# Element lookups and screenshots now target the second display
+element = driver.find_element('id', 'com.example.myapp:id/myButton')
+screenshot = driver.get_screenshot_as_base64()
+
+# Reset to default display
+driver.update_settings({'currentDisplayId': -1})
+```
+
+## Screenshots on multiple displays
+
+The standard `getScreenshot()` command respects `currentDisplayId`. For more control — such as capturing all displays at once — use `mobile: screenshots`.
+
+```python python
+# Capture all displays at once
+screenshots = driver.execute_script('mobile: screenshots', {})
+for display_id, info in screenshots.items():
+    print(f"Display {display_id}: {info['name']}, default: {info['isDefault']}")
+    # info['payload'] contains base64-encoded PNG data
+
+# Capture a specific physical display
+displays = driver.execute_script('mobile: listDisplays')
+physical_id = displays[0]['physicalId']
+
+if physical_id:
+    result = driver.execute_script('mobile: screenshots', {
+        'displayId': physical_id
+    })
+    screenshot_data = result[physical_id]['payload']
+```
+
+<Note>`mobile: screenshots` uses **physical or virtual display IDs** (strings), not the logical display ID used by `currentDisplayId`. Use `mobile: listDisplays` to retrieve the correct ID.</Note>
+
+## Best practices
+
+<CardGroup cols={2}>
+
+<Card title="Use UiObject2 locators" icon="crosshairs">
+  Prefer `id`, `accessibility id`, and `className` over `-android uiautomator` for any multi-window scenario.
+</Card>
+
+<Card title="Start with default settings" icon="sliders">
+  Only enable `enableMultiWindows` when you specifically need elements from multiple windows. It adds processing overhead.
+</Card>
+
+<Card title="List windows first" icon="list">
+  Use `mobile: listWindows` to inspect the window structure before writing locators. It shows which windows are accessible and their IDs.
+</Card>
+
+<Card title="Reset the accessibility cache" icon="rotate">
+  After window changes, call `mobile: resetAccessibilityCache` if you encounter stale element references.
+</Card>
+
+</CardGroup>

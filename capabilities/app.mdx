@@ -1,0 +1,130 @@
+---
+title: "App Capabilities"
+description: "Capabilities for configuring the application under test"
+---
+
+## App
+
+<ParamField path="appium:app" type="string">
+  Full path to the application to be tested. The app must be located on the same machine where the server is running. Both `.apk` and `.apks` extensions are supported. Can also be a URL to a remote location.
+
+  <Note>
+    If neither `appium:app`, `appium:appPackage`, nor `browserName` are provided, the driver starts from the home screen and expects the test to navigate from there. Do not provide both `appium:app` and `browserName` at the same time.
+  </Note>
+</ParamField>
+
+<ParamField path="browserName" type="string">
+  The name of the browser to run the test on (typically `chrome`). When provided, the driver starts the session in web context mode rather than native mode. See [Automating hybrid apps](/guides/hybrid-apps) for more details.
+</ParamField>
+
+<ParamField path="appium:appPackage" type="string">
+  Application package identifier to be started. If not provided, UiAutomator2 attempts to detect it automatically from the package provided by `appium:app`.
+</ParamField>
+
+<ParamField path="appium:appActivity" type="string">
+  Main application activity identifier. If not provided, UiAutomator2 attempts to detect it automatically from the package provided by `appium:app`.
+</ParamField>
+
+<ParamField path="appium:appWaitActivity" type="string">
+  Identifier of the first activity that the application invokes. If not provided, defaults to the value of `appium:appActivity`.
+</ParamField>
+
+<ParamField path="appium:appWaitPackage" type="string">
+  Identifier of the first package that is invoked. If not provided, defaults to the value of `appium:appPackage`.
+</ParamField>
+
+<ParamField path="appium:appWaitDuration" type="number" default="20000">
+  Maximum number of milliseconds to wait until the application under test has started (e.g. an activity returns control to the caller).
+</ParamField>
+
+<ParamField path="appium:androidInstallTimeout" type="number" default="90000">
+  Maximum number of milliseconds to wait until the application under test is installed.
+</ParamField>
+
+<ParamField path="appium:appWaitForLaunch" type="boolean" default="true">
+  When `true`, blocks until the app under test returns control to the caller after its activity has been started by Activity Manager. Set to `false` to continue the test without waiting.
+</ParamField>
+
+<ParamField path="appium:autoLaunch" type="boolean" default="true">
+  Whether to launch the application under test automatically after the session starts.
+</ParamField>
+
+<ParamField path="appium:autoGrantPermissions" type="boolean" default="false">
+  When `true`, grants all requested application permissions automatically when the test starts.
+
+  <Note>
+    The `targetSdkVersion` in the application manifest must be greater than or equal to 23, and the Android version on the device must be Android 6 (API level 23) or higher. Apps with `targetSdkVersion` 22 or lower must be reinstalled to grant permissions (e.g. by setting `appium:fullReset` to `true` on Android 6+ devices). For special security permissions such as access to notifications or media recording, use the `mobile: changePermissions` extension with `appops` target.
+  </Note>
+</ParamField>
+
+<ParamField path="appium:otherApps" type="string">
+  One or more comma-separated paths to Android packages that will be installed alongside the main application under test. Useful when the app has dependencies on other packages.
+</ParamField>
+
+<ParamField path="appium:uninstallOtherPackages" type="string">
+  One or more comma-separated package identifiers to be uninstalled from the device before the test starts.
+</ParamField>
+
+<ParamField path="appium:noSign" type="boolean">
+  When `true`, skips application signing. By default, all apps are signed with the default Appium debug signature if they do not already have one. This capability cancels all signing checks and uses the application package as-is.
+
+  <Note>
+    This capability has no effect on `.apks` packages, which are expected to be already signed.
+  </Note>
+</ParamField>
+
+<ParamField path="appium:forceAppLaunch" type="boolean" default="false">
+  When `true`, the application under test is always forcefully restarted on session startup, even if `appium:noReset` is `true` and the app was already running. Available since driver version 2.12.
+</ParamField>
+
+<ParamField path="appium:dontStopAppOnReset" type="boolean" default="false">
+  When `true`, the application is not restarted if it was already running. If `appium:noReset` is falsy, the app will still be restarted unless this capability is `true` and `appium:forceAppLaunch` is not set.
+</ParamField>
+
+<ParamField path="appium:shouldTerminateApp" type="boolean" default="false">
+  When `true`, the application under test is always terminated on session end, even if `appium:noReset` is `true`.
+</ParamField>
+
+## App Signing
+
+<ParamField path="appium:useKeystore" type="boolean" default="false">
+  When `true`, uses a custom keystore to sign the app under test instead of the default Appium debug certificate. Use together with `appium:keystorePath`, `appium:keystorePassword`, `appium:keyAlias`, and `appium:keyPassword`.
+</ParamField>
+
+<ParamField path="appium:keystorePath" type="string">
+  Full path to the keystore file on the server filesystem. Used in combination with `appium:useKeystore`.
+</ParamField>
+
+<ParamField path="appium:keystorePassword" type="string">
+  Password to the keystore file specified by `appium:keystorePath`. Used in combination with `appium:useKeystore`.
+</ParamField>
+
+<ParamField path="appium:keyAlias" type="string">
+  Alias of the key in the keystore file specified by `appium:keystorePath`. Used in combination with `appium:useKeystore`.
+</ParamField>
+
+<ParamField path="appium:keyPassword" type="string">
+  Password of the key in the keystore file specified by `appium:keystorePath`. Used in combination with `appium:useKeystore`.
+</ParamField>
+
+## App Localization
+
+<ParamField path="appium:language" type="string">
+  Name of the language to extract application strings for and to set for the app under test. Example values: `en`, `ja`.
+
+  <Note>
+    If `appium:language` is provided, `appium:locale` must also be set. The combination must be a known locale present in the list returned by ICU's `getAvailableULocales()` method. See the [Android Locale documentation](https://developer.android.com/reference/java/util/Locale.html) for details.
+  </Note>
+</ParamField>
+
+<ParamField path="appium:locale" type="string">
+  Sets the locale for the app under test. Example values: `US`, `JP`.
+
+  <Note>
+    If `appium:locale` is provided, `appium:language` must also be set. The combination must be a known locale. See the [Android Locale documentation](https://developer.android.com/reference/java/util/Locale.html) for details.
+  </Note>
+</ParamField>
+
+<ParamField path="appium:localeScript" type="string">
+  Canonical name of the locale script to be set for the app under test. For example, `Hans` in the locale `zh-Hans-CN`. See the [Android Locale documentation](https://developer.android.com/reference/java/util/Locale.html) for more details.
+</ParamField>

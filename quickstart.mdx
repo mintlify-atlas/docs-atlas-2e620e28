@@ -1,80 +1,165 @@
 ---
 title: "Quickstart"
-description: "Start building awesome documentation in minutes"
+description: "Install the UiAutomator2 driver and run your first Android automation test"
 ---
 
-## Get started in three steps
+This guide walks you through installing the driver, preparing your environment, and running a simple test against an Android device or emulator.
 
-Get your documentation site running locally and make your first customization.
+<Steps>
+  <Step title="Install Appium 3">
+    Install Appium globally via npm. Appium 3 is required for this driver.
 
-### Step 1: Set up your local environment
+    ```bash
+    npm install -g appium
+    ```
 
-<AccordionGroup>
-  <Accordion icon="copy" title="Clone your docs locally">
-    During the onboarding process, you created a GitHub repository with your docs content if you didn't already have one. You can find a link to this repository in your [dashboard](https://dashboard.mintlify.com).
-    
-    To clone the repository locally so that you can make and preview changes to your docs, follow the [Cloning a repository](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository) guide in the GitHub docs.
-  </Accordion>
-  <Accordion icon="rectangle-terminal" title="Start the preview server">
-    1. Install the Mintlify CLI: `npm i -g mint`
-    2. Navigate to your docs directory and run: `mint dev`
-    3. Open `http://localhost:3000` to see your docs live!
-    
-    <Tip>Your preview updates automatically as you edit files.</Tip>
-  </Accordion>
-</AccordionGroup>
+    Verify the installation:
 
-### Step 2: Deploy your changes
+    ```bash
+    appium --version
+    ```
+  </Step>
 
-<AccordionGroup>
-  <Accordion icon="github" title="Install our GitHub app">
-    Install the Mintlify GitHub app from your [dashboard](https://dashboard.mintlify.com/settings/organization/github-app).
-    
-    Our GitHub app automatically deploys your changes to your docs site, so you don't need to manage deployments yourself.
-</Accordion>
-<Accordion icon="palette" title="Update your site name and colors">
-    For a first change, let's update the name and colors of your docs site.
+  <Step title="Install the UiAutomator2 driver">
+    Use the Appium driver CLI to install the UiAutomator2 driver into your Appium distribution.
 
-    1. Open `docs.json` in your editor.
-    2. Change the `"name"` field to your project name.
-    3. Update the `"colors"` to match your brand.
-    4. Save and see your changes instantly at `http://localhost:3000`.
+    ```bash
+    appium driver install uiautomator2
+    ```
+  </Step>
 
-    <Tip>Try changing the primary color to see an immediate difference!</Tip>
-  </Accordion>
-</AccordionGroup>
+  <Step title="Verify the installation">
+    Confirm that the driver is listed as installed:
 
-### Step 3: Go live
+    ```bash
+    appium driver list --installed
+    ```
 
-<Accordion icon="rocket" title="Publish your docs">
-  1. Commit and push your changes.
-  2. Your docs will update and be live in moments!
-</Accordion>
+    You should see `uiautomator2` in the output with its version number.
+  </Step>
+
+  <Step title="Set up Android SDK and environment variables">
+    The driver requires the Android SDK platform tools (`adb`) and a Java JDK to be installed and discoverable.
+
+    1. Install [Android Studio](https://developer.android.com/studio) or the [Android SDK command-line tools](https://developer.android.com/studio/releases/platform-tools) to get `adb`.
+    2. Install a JDK (Java 8 for Android API level < 30; Java 9+ for API level 30 and above).
+    3. Set the required environment variables:
+
+    | Variable | Purpose |
+    | --- | --- |
+    | `ANDROID_HOME` or `ANDROID_SDK_ROOT` | Path to the Android SDK installation directory |
+    | `JAVA_HOME` | Path to the JDK installation directory |
+
+    Example (Linux/macOS):
+
+    ```bash
+    export ANDROID_HOME=$HOME/Library/Android/sdk
+    export JAVA_HOME=$(/usr/libexec/java_home)
+    export PATH=$ANDROID_HOME/platform-tools:$PATH
+    ```
+  </Step>
+
+  <Step title="Run doctor checks">
+    The driver ships with a `doctor` command that validates your environment automatically:
+
+    ```bash
+    appium driver doctor uiautomator2
+    ```
+
+    Fix any issues reported before proceeding. The doctor checks both required prerequisites and optional extensions.
+  </Step>
+
+  <Step title="Connect a device or start an emulator">
+    **Real device:** Enable [USB debugging](https://developer.android.com/studio/debug/dev-options) on the device, connect it via USB, and confirm it appears online:
+
+    ```bash
+    adb devices -l
+    ```
+
+    **Emulator:** Create and launch an AVD via Android Studio or `avdmanager`, then confirm it appears in the `adb devices -l` output.
+  </Step>
+
+  <Step title="Start Appium server">
+    ```bash
+    appium
+    ```
+
+    The server listens on `http://127.0.0.1:4723` by default.
+  </Step>
+
+  <Step title="Create a session">
+    Write a test that opens a session with the `UiAutomator2` automation name. Examples in Python, Java, and JavaScript (WebdriverIO) are shown below.
+
+    <Note>
+      Replace `/path/to/your/app.apk` with the actual path to your application package, and adjust `deviceName` or `udid` to match your connected device.
+    </Note>
+
+    <CodeGroup>
+
+    ```python python
+    from appium import webdriver
+    from appium.options.android import UiAutomator2Options
+
+    options = UiAutomator2Options()
+    options.platform_name = 'Android'
+    options.device_name = 'emulator-5554'
+    options.app = '/path/to/your/app.apk'
+    options.no_reset = True
+
+    driver = webdriver.Remote('http://127.0.0.1:4723', options=options)
+
+    # Find an element and interact with it
+    el = driver.find_element('accessibility id', 'Submit')
+    el.click()
+
+    driver.quit()
+    ```
+
+    ```java java
+    import io.appium.java_client.AppiumBy;
+    import io.appium.java_client.android.AndroidDriver;
+    import io.appium.java_client.android.options.UiAutomator2Options;
+    import java.net.URL;
+
+    UiAutomator2Options options = new UiAutomator2Options();
+    options.setDeviceName("emulator-5554");
+    options.setApp("/path/to/your/app.apk");
+    options.setNoReset(true);
+
+    AndroidDriver driver = new AndroidDriver(new URL("http://127.0.0.1:4723"), options);
+
+    WebElement el = driver.findElement(AppiumBy.accessibilityId("Submit"));
+    el.click();
+
+    driver.quit();
+    ```
+
+    ```javascript javascript
+    const { remote } = require('webdriverio');
+
+    const driver = await remote({
+      hostname: '127.0.0.1',
+      port: 4723,
+      capabilities: {
+        platformName: 'Android',
+        'appium:automationName': 'UiAutomator2',
+        'appium:deviceName': 'emulator-5554',
+        'appium:app': '/path/to/your/app.apk',
+      }
+    });
+
+    const el = await driver.$('~Submit');
+    await el.click();
+
+    await driver.deleteSession();
+    ```
+
+    </CodeGroup>
+  </Step>
+</Steps>
 
 ## Next steps
 
-Now that you have your docs running, explore these key features:
-
-<CardGroup cols={2}>
-
-<Card title="Write Content" icon="pen-to-square" href="/essentials/markdown">
-  Learn MDX syntax and start writing your documentation.
-</Card>
-
-<Card title="Customize style" icon="palette" href="/essentials/settings">
-  Make your docs match your brand perfectly.
-</Card>
-
-<Card title="Add code examples" icon="square-code" href="/essentials/code">
-  Include syntax-highlighted code blocks.
-</Card>
-
-<Card title="API documentation" icon="code" href="/api-reference/introduction">
-  Auto-generate API docs from OpenAPI specs.
-</Card>
-
-</CardGroup>
-
-<Note>
-  **Need help?** See our [full documentation](https://mintlify.com/docs) or join our [community](https://mintlify.com/community).
-</Note>
+- Review the full [capabilities reference](/capabilities/general) to configure your session.
+- Learn about [activity startup troubleshooting](/guides/activity-startup) if your app does not launch as expected.
+- Explore [element finding strategies](/guides/element-finding) available for Android.

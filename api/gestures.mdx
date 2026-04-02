@@ -1,0 +1,776 @@
+---
+title: "Gesture Commands"
+description: "Mobile extension commands for touch gestures and interactions"
+---
+
+UiAutomator2 provides high-level gesture commands as alternatives to the W3C Actions API for common Android touch interactions. These commands are implemented on top of the same foundation as W3C Actions and are recommended when the native tap or touch calls behave unexpectedly.
+
+<Note>
+  For more complex gesture sequences, use the [W3C Actions API](https://appiumpro.com/editions/29-automating-complex-gestures-with-the-w3c-actions-api) or refer to the [Android input events guide](https://github.com/appium/appium-uiautomator2-driver/blob/master/docs/actions.md).
+</Note>
+
+All gesture commands accept either an `elementId` to operate on a specific element, or explicit coordinate/area arguments to target a region of the screen. When both are provided, the coordinates are treated as offsets from the top-left corner of the element.
+
+---
+
+## mobile: clickGesture
+
+Performs a single tap on an element or screen coordinates. Recommended as a workaround when the native `click` call fails despite correct coordinates.
+
+<AccordionGroup>
+  <Accordion title="Parameters">
+    <ParamField body="elementId" type="string">
+      The ID of the element to tap. If omitted, both `x` and `y` must be provided.
+    </ParamField>
+
+    <ParamField body="x" type="number">
+      X coordinate of the tap point, or X offset from the element's top-left corner when `elementId` is provided.
+    </ParamField>
+
+    <ParamField body="y" type="number">
+      Y coordinate of the tap point, or Y offset from the element's top-left corner when `elementId` is provided.
+    </ParamField>
+
+    <ParamField body="locator" type="object">
+      A map with `strategy` and `selector` keys for dynamically locating an element at runtime. Use this when the element ID may change between interactions.
+    </ParamField>
+  </Accordion>
+</AccordionGroup>
+
+<CodeGroup>
+
+```java Java
+// Click by element
+driver.executeScript("mobile: clickGesture", Map.ofEntries(
+    Map.entry("elementId", ((RemoteWebElement) element).getId())
+));
+
+// Click by coordinates
+driver.executeScript("mobile: clickGesture", Map.ofEntries(
+    Map.entry("x", 100),
+    Map.entry("y", 200)
+));
+```
+
+```python Python
+# Click by element
+driver.execute_script('mobile: clickGesture', {'elementId': element.id})
+
+# Click by coordinates
+driver.execute_script('mobile: clickGesture', {'x': 100, 'y': 200})
+```
+
+```javascript WebdriverIO
+// Click by element
+await driver.executeScript('mobile: clickGesture', [{ elementId: element.elementId }]);
+
+// Click by coordinates
+await driver.executeScript('mobile: clickGesture', [{ x: 100, y: 200 }]);
+```
+
+```ruby Ruby
+# Click by element
+@driver.execute_script 'mobile: clickGesture', { elementId: element.id }
+
+# Click by coordinates
+@driver.execute_script 'mobile: clickGesture', { x: 100, y: 200 }
+```
+
+</CodeGroup>
+
+---
+
+## mobile: longClickGesture
+
+Performs a long press on an element or screen coordinates.
+
+<AccordionGroup>
+  <Accordion title="Parameters">
+    <ParamField body="elementId" type="string">
+      The ID of the element to long press. If omitted, both `x` and `y` must be provided.
+    </ParamField>
+
+    <ParamField body="x" type="number">
+      X coordinate or offset from the element's top-left corner.
+    </ParamField>
+
+    <ParamField body="y" type="number">
+      Y coordinate or offset from the element's top-left corner.
+    </ParamField>
+
+    <ParamField body="duration" type="number">
+      Duration of the long press in milliseconds. Must not be negative. Defaults to `500`.
+    </ParamField>
+
+    <ParamField body="locator" type="object">
+      A map with `strategy` and `selector` keys for dynamically locating an element at runtime.
+    </ParamField>
+  </Accordion>
+</AccordionGroup>
+
+<CodeGroup>
+
+```java Java
+driver.executeScript("mobile: longClickGesture", Map.ofEntries(
+    Map.entry("elementId", ((RemoteWebElement) element).getId()),
+    Map.entry("duration", 1000)
+));
+```
+
+```python Python
+driver.execute_script('mobile: longClickGesture', {
+    'x': 100,
+    'y': 100,
+    'duration': 1000
+})
+```
+
+```javascript WebdriverIO
+await driver.executeScript('mobile: longClickGesture', [{
+    elementId: element.elementId,
+    duration: 1000
+}]);
+```
+
+```ruby Ruby
+@driver.execute_script 'mobile: longClickGesture', {
+    elementId: element.id,
+    duration: 1000
+}
+```
+
+</CodeGroup>
+
+---
+
+## mobile: doubleClickGesture
+
+Performs a double tap on an element or screen coordinates.
+
+<AccordionGroup>
+  <Accordion title="Parameters">
+    <ParamField body="elementId" type="string">
+      The ID of the element to double-tap. If omitted, both `x` and `y` must be provided.
+    </ParamField>
+
+    <ParamField body="x" type="number">
+      X coordinate or offset from the element's top-left corner.
+    </ParamField>
+
+    <ParamField body="y" type="number">
+      Y coordinate or offset from the element's top-left corner.
+    </ParamField>
+
+    <ParamField body="locator" type="object">
+      A map with `strategy` and `selector` keys for dynamically locating an element at runtime.
+    </ParamField>
+  </Accordion>
+</AccordionGroup>
+
+<CodeGroup>
+
+```java Java
+driver.executeScript("mobile: doubleClickGesture", Map.ofEntries(
+    Map.entry("elementId", ((RemoteWebElement) element).getId())
+));
+```
+
+```python Python
+driver.execute_script('mobile: doubleClickGesture', {'x': 100, 'y': 100})
+```
+
+```javascript WebdriverIO
+await driver.executeScript('mobile: doubleClickGesture', [{
+    elementId: element.elementId
+}]);
+```
+
+```ruby Ruby
+@driver.execute_script 'mobile: doubleClickGesture', { elementId: element.id }
+```
+
+</CodeGroup>
+
+---
+
+## mobile: dragGesture
+
+Drags an element or a point on screen to a target position.
+
+<AccordionGroup>
+  <Accordion title="Parameters">
+    <ParamField body="elementId" type="string">
+      The ID of the element to drag. If omitted, both `startX` and `startY` must be provided. When both are given, start coordinates are treated as offsets from the element's top-left corner.
+    </ParamField>
+
+    <ParamField body="startX" type="number">
+      X coordinate of the drag start point.
+    </ParamField>
+
+    <ParamField body="startY" type="number">
+      Y coordinate of the drag start point.
+    </ParamField>
+
+    <ParamField body="endX" type="number" required>
+      X coordinate of the drag end point.
+    </ParamField>
+
+    <ParamField body="endY" type="number" required>
+      Y coordinate of the drag end point.
+    </ParamField>
+
+    <ParamField body="speed" type="number">
+      Speed of the drag gesture in pixels per second. Must not be negative. Defaults to `2500 * displayDensity`.
+    </ParamField>
+  </Accordion>
+</AccordionGroup>
+
+<CodeGroup>
+
+```java Java
+driver.executeScript("mobile: dragGesture", Map.ofEntries(
+    Map.entry("elementId", ((RemoteWebElement) element).getId()),
+    Map.entry("endX", 500),
+    Map.entry("endY", 500)
+));
+```
+
+```python Python
+driver.execute_script('mobile: dragGesture', {
+    'startX': 100,
+    'startY': 100,
+    'endX': 500,
+    'endY': 500,
+    'speed': 2500
+})
+```
+
+```javascript WebdriverIO
+await driver.executeScript('mobile: dragGesture', [{
+    elementId: element.elementId,
+    endX: 500,
+    endY: 500
+}]);
+```
+
+```ruby Ruby
+@driver.execute_script 'mobile: dragGesture', {
+    startX: 100, startY: 100,
+    endX: 500, endY: 500
+}
+```
+
+</CodeGroup>
+
+---
+
+## mobile: swipeGesture
+
+Performs a swipe gesture in a given direction within an element or a defined screen area.
+
+<AccordionGroup>
+  <Accordion title="Parameters">
+    <ParamField body="elementId" type="string">
+      The ID of the element to swipe within. If omitted, all four area boundary arguments (`left`, `top`, `width`, `height`) must be provided. When both are given, the area is ignored.
+    </ParamField>
+
+    <ParamField body="left" type="number">
+      Left coordinate of the swipe bounding area in pixels.
+    </ParamField>
+
+    <ParamField body="top" type="number">
+      Top coordinate of the swipe bounding area in pixels.
+    </ParamField>
+
+    <ParamField body="width" type="number">
+      Width of the swipe bounding area in pixels.
+    </ParamField>
+
+    <ParamField body="height" type="number">
+      Height of the swipe bounding area in pixels.
+    </ParamField>
+
+    <ParamField body="direction" type="string" required>
+      Direction of the swipe. Accepted values (case-insensitive): `'up'`, `'down'`, `'left'`, `'right'`.
+    </ParamField>
+
+    <ParamField body="percent" type="number" required>
+      Proportion of the swipe area to traverse. Valid values are floats in the range `0.0` to `1.0`, where `1.0` represents 100%.
+    </ParamField>
+
+    <ParamField body="speed" type="number">
+      Speed of the swipe in pixels per second. Must not be negative. Defaults to `5000 * displayDensity`.
+    </ParamField>
+  </Accordion>
+</AccordionGroup>
+
+<CodeGroup>
+
+```java Java
+driver.executeScript("mobile: swipeGesture", Map.ofEntries(
+    Map.entry("left", 100),
+    Map.entry("top", 100),
+    Map.entry("width", 200),
+    Map.entry("height", 200),
+    Map.entry("direction", "left"),
+    Map.entry("percent", 0.75)
+));
+```
+
+```python Python
+driver.execute_script('mobile: swipeGesture', {
+    'left': 100, 'top': 100,
+    'width': 200, 'height': 200,
+    'direction': 'left',
+    'percent': 0.75
+})
+```
+
+```javascript WebdriverIO
+await driver.executeScript('mobile: swipeGesture', [{
+    left: 100, top: 100,
+    width: 200, height: 200,
+    direction: 'left',
+    percent: 0.75
+}]);
+```
+
+```ruby Ruby
+@driver.execute_script 'mobile: swipeGesture', {
+    left: 100, top: 100,
+    width: 200, height: 200,
+    direction: 'left',
+    percent: 0.75
+}
+```
+
+</CodeGroup>
+
+---
+
+## mobile: scrollGesture
+
+Performs a scroll gesture within an element or screen area and reports whether further scrolling is possible.
+
+<AccordionGroup>
+  <Accordion title="Parameters">
+    <ParamField body="elementId" type="string">
+      The ID of the element to scroll within. If omitted, all four area boundary arguments must be provided. When both are given, the area is ignored.
+    </ParamField>
+
+    <ParamField body="left" type="number">
+      Left coordinate of the scroll bounding area in pixels.
+    </ParamField>
+
+    <ParamField body="top" type="number">
+      Top coordinate of the scroll bounding area in pixels.
+    </ParamField>
+
+    <ParamField body="width" type="number">
+      Width of the scroll bounding area in pixels.
+    </ParamField>
+
+    <ParamField body="height" type="number">
+      Height of the scroll bounding area in pixels.
+    </ParamField>
+
+    <ParamField body="direction" type="string" required>
+      Scrolling direction. Accepted values (case-insensitive): `'up'`, `'down'`, `'left'`, `'right'`.
+    </ParamField>
+
+    <ParamField body="percent" type="number" required>
+      Size of the scroll as a proportion of the scrolling area. Must be greater than `0`, where `1.0` is 100%.
+    </ParamField>
+
+    <ParamField body="speed" type="number">
+      Speed of the scroll in pixels per second. Must not be negative. Defaults to `5000 * displayDensity`.
+    </ParamField>
+  </Accordion>
+  <Accordion title="Returns">
+    <ResponseField name="result" type="boolean">
+      `true` if the scrollable container can still scroll further in the given direction after the gesture, `false` if the end has been reached.
+    </ResponseField>
+  </Accordion>
+</AccordionGroup>
+
+<CodeGroup>
+
+```java Java
+boolean canScrollMore = (Boolean) driver.executeScript("mobile: scrollGesture", Map.ofEntries(
+    Map.entry("left", 100),
+    Map.entry("top", 100),
+    Map.entry("width", 200),
+    Map.entry("height", 200),
+    Map.entry("direction", "down"),
+    Map.entry("percent", 1.0)
+));
+```
+
+```python Python
+can_scroll_more = driver.execute_script('mobile: scrollGesture', {
+    'left': 100, 'top': 100,
+    'width': 200, 'height': 200,
+    'direction': 'down',
+    'percent': 3.0
+})
+```
+
+```javascript WebdriverIO
+const canScrollMore = await driver.executeScript('mobile: scrollGesture', [{
+    left: 100, top: 100,
+    width: 200, height: 200,
+    direction: 'down',
+    percent: 1.0
+}]);
+```
+
+```ruby Ruby
+can_scroll_more = @driver.execute_script 'mobile: scrollGesture', {
+    left: 100, top: 100,
+    width: 200, height: 200,
+    direction: 'down',
+    percent: 1.0
+}
+```
+
+</CodeGroup>
+
+---
+
+## mobile: flingGesture
+
+Performs a fast fling gesture within an element or screen area. Returns whether additional scrolling is possible after the fling completes.
+
+<AccordionGroup>
+  <Accordion title="Parameters">
+    <ParamField body="elementId" type="string">
+      The ID of the element to fling within. If omitted, all four area boundary arguments must be provided. When both are given, the area is ignored.
+    </ParamField>
+
+    <ParamField body="left" type="number">
+      Left coordinate of the fling bounding area in pixels.
+    </ParamField>
+
+    <ParamField body="top" type="number">
+      Top coordinate of the fling bounding area in pixels.
+    </ParamField>
+
+    <ParamField body="width" type="number">
+      Width of the fling bounding area in pixels.
+    </ParamField>
+
+    <ParamField body="height" type="number">
+      Height of the fling bounding area in pixels.
+    </ParamField>
+
+    <ParamField body="direction" type="string" required>
+      Direction of the fling. Accepted values (case-insensitive): `'up'`, `'down'`, `'left'`, `'right'`.
+    </ParamField>
+
+    <ParamField body="speed" type="number">
+      Speed of the fling in pixels per second. Must be greater than the minimum fling velocity for the view (50 by default). Defaults to `7500 * displayDensity`.
+    </ParamField>
+  </Accordion>
+  <Accordion title="Returns">
+    <ResponseField name="result" type="boolean">
+      `true` if the scrollable container can still scroll further in the given direction, `false` if the end has been reached.
+    </ResponseField>
+  </Accordion>
+</AccordionGroup>
+
+<CodeGroup>
+
+```java Java
+boolean canScrollMore = (Boolean) driver.executeScript("mobile: flingGesture", Map.ofEntries(
+    Map.entry("elementId", ((RemoteWebElement) element).getId()),
+    Map.entry("direction", "down"),
+    Map.entry("speed", 500)
+));
+```
+
+```python Python
+can_scroll_more = driver.execute_script('mobile: flingGesture', {
+    'elementId': element.id,
+    'direction': 'down',
+    'speed': 500
+})
+```
+
+```javascript WebdriverIO
+const canScrollMore = await driver.executeScript('mobile: flingGesture', [{
+    elementId: element.elementId,
+    direction: 'right',
+    speed: 500
+}]);
+```
+
+```ruby Ruby
+can_scroll_more = @driver.execute_script 'mobile: flingGesture', {
+    elementId: element.id,
+    direction: 'down',
+    speed: 500
+}
+```
+
+</CodeGroup>
+
+---
+
+## mobile: pinchCloseGesture
+
+Performs a pinch-close (zoom out) gesture on an element or a defined screen area.
+
+<AccordionGroup>
+  <Accordion title="Parameters">
+    <ParamField body="elementId" type="string">
+      The ID of the element to pinch. If omitted, all four area boundary arguments must be provided. When both are given, the area is ignored.
+    </ParamField>
+
+    <ParamField body="left" type="number">
+      Left coordinate of the pinch bounding area in pixels.
+    </ParamField>
+
+    <ParamField body="top" type="number">
+      Top coordinate of the pinch bounding area in pixels.
+    </ParamField>
+
+    <ParamField body="width" type="number">
+      Width of the pinch bounding area in pixels.
+    </ParamField>
+
+    <ParamField body="height" type="number">
+      Height of the pinch bounding area in pixels.
+    </ParamField>
+
+    <ParamField body="percent" type="number" required>
+      Size of the pinch as a proportion of the pinch area. Valid values are floats in the range `0.0` to `1.0`, where `1.0` is 100%.
+    </ParamField>
+
+    <ParamField body="speed" type="number">
+      Speed of the pinch gesture in pixels per second. Must not be negative. Defaults to `2500 * displayDensity`.
+    </ParamField>
+  </Accordion>
+</AccordionGroup>
+
+<CodeGroup>
+
+```java Java
+driver.executeScript("mobile: pinchCloseGesture", Map.ofEntries(
+    Map.entry("elementId", ((RemoteWebElement) element).getId()),
+    Map.entry("percent", 0.75)
+));
+```
+
+```python Python
+driver.execute_script('mobile: pinchCloseGesture', {
+    'elementId': element.id,
+    'percent': 0.75
+})
+```
+
+```javascript WebdriverIO
+await driver.executeScript('mobile: pinchCloseGesture', [{
+    elementId: element.elementId,
+    percent: 0.75
+}]);
+```
+
+```ruby Ruby
+@driver.execute_script 'mobile: pinchCloseGesture', {
+    elementId: element.id,
+    percent: 0.75
+}
+```
+
+</CodeGroup>
+
+---
+
+## mobile: pinchOpenGesture
+
+Performs a pinch-open (zoom in) gesture on an element or a defined screen area.
+
+<AccordionGroup>
+  <Accordion title="Parameters">
+    <ParamField body="elementId" type="string">
+      The ID of the element to pinch. If omitted, all four area boundary arguments must be provided. When both are given, the area is ignored.
+    </ParamField>
+
+    <ParamField body="left" type="number">
+      Left coordinate of the pinch bounding area in pixels.
+    </ParamField>
+
+    <ParamField body="top" type="number">
+      Top coordinate of the pinch bounding area in pixels.
+    </ParamField>
+
+    <ParamField body="width" type="number">
+      Width of the pinch bounding area in pixels.
+    </ParamField>
+
+    <ParamField body="height" type="number">
+      Height of the pinch bounding area in pixels.
+    </ParamField>
+
+    <ParamField body="percent" type="number" required>
+      Size of the pinch as a proportion of the pinch area. Valid values are floats in the range `0.0` to `1.0`, where `1.0` is 100%.
+    </ParamField>
+
+    <ParamField body="speed" type="number">
+      Speed of the pinch gesture in pixels per second. Must not be negative. Defaults to `2500 * displayDensity`.
+    </ParamField>
+  </Accordion>
+</AccordionGroup>
+
+<CodeGroup>
+
+```java Java
+driver.executeScript("mobile: pinchOpenGesture", Map.ofEntries(
+    Map.entry("elementId", ((RemoteWebElement) element).getId()),
+    Map.entry("percent", 0.75)
+));
+```
+
+```python Python
+driver.execute_script('mobile: pinchOpenGesture', {
+    'elementId': element.id,
+    'percent': 0.75
+})
+```
+
+```javascript WebdriverIO
+await driver.executeScript('mobile: pinchOpenGesture', [{
+    elementId: element.elementId,
+    percent: 0.75
+}]);
+```
+
+```ruby Ruby
+@driver.execute_script 'mobile: pinchOpenGesture', {
+    elementId: element.id,
+    percent: 0.75
+}
+```
+
+</CodeGroup>
+
+---
+
+## mobile: scroll
+
+Scrolls a scrollable container until a target element identified by a locator strategy becomes visible. Scrolling starts from the beginning of the container and proceeds step by step until the element is found or the maximum number of swipes is reached. Returns immediately if the target is already visible.
+
+<Note>
+  The scroll direction (vertical or horizontal) is detected automatically from the container's orientation.
+</Note>
+
+<AccordionGroup>
+  <Accordion title="Parameters">
+    <ParamField body="elementId" type="string">
+      The ID of the scrollable container element. The element must be a valid scrollable container located using the `-android uiautomator` strategy. If omitted, the first currently visible scrollable view is used.
+    </ParamField>
+
+    <ParamField body="strategy" type="string" required>
+      The locator strategy for finding the target element. Supported values:
+      - `'accessibility id'` — matches by `UiSelector().description`
+      - `'class name'` — matches by `UiSelector().className`
+      - `'-android uiautomator'` — matches using a full `UiSelector` expression
+    </ParamField>
+
+    <ParamField body="selector" type="string" required>
+      The selector value corresponding to the chosen strategy.
+    </ParamField>
+
+    <ParamField body="maxSwipes" type="number">
+      Maximum number of swipes to perform before giving up. If unset, the value is retrieved from the scrollable element's `getMaxSearchSwipes()` property.
+    </ParamField>
+  </Accordion>
+</AccordionGroup>
+
+<CodeGroup>
+
+```java Java
+driver.executeScript("mobile: scroll", Map.ofEntries(
+    Map.entry("strategy", "accessibility id"),
+    Map.entry("selector", "Submit Button")
+));
+```
+
+```python Python
+driver.execute_script('mobile: scroll', {
+    'strategy': 'accessibility id',
+    'selector': 'Submit Button',
+    'maxSwipes': 10
+})
+```
+
+```javascript WebdriverIO
+await driver.executeScript('mobile: scroll', [{
+    strategy: '-android uiautomator',
+    selector: 'new UiSelector().text("Submit")',
+    maxSwipes: 10
+}]);
+```
+
+```ruby Ruby
+@driver.execute_script 'mobile: scroll', {
+    strategy: 'accessibility id',
+    selector: 'Submit Button'
+}
+```
+
+</CodeGroup>
+
+---
+
+## mobile: scrollBackTo
+
+Scrolls a scrollable container backwards until a previously found target element becomes visible again. Both the scrollable container and the target element must already be located — pass their element IDs.
+
+<AccordionGroup>
+  <Accordion title="Parameters">
+    <ParamField body="elementId" type="string" required>
+      The ID of the scrollable container element. Must be located via `-android uiautomator` strategy.
+    </ParamField>
+
+    <ParamField body="elementToId" type="string" required>
+      The ID of the target element to scroll back to.
+    </ParamField>
+  </Accordion>
+</AccordionGroup>
+
+<CodeGroup>
+
+```java Java
+WebElement list = driver.findElement(AppiumBy.androidUIAutomator(
+    "new UiSelector().resourceId(\"com.example:id/recycler\")"
+));
+WebElement target = driver.findElement(AppiumBy.accessibilityId("First Item"));
+
+driver.executeScript("mobile: scrollBackTo", Map.ofEntries(
+    Map.entry("elementId", ((RemoteWebElement) list).getId()),
+    Map.entry("elementToId", ((RemoteWebElement) target).getId())
+));
+```
+
+```python Python
+lst = driver.find_element(AppiumBy.ANDROID_UIAUTOMATOR, 'new UiSelector().resourceId("com.example:id/recycler")')
+target = driver.find_element(AppiumBy.ACCESSIBILITY_ID, 'First Item')
+
+driver.execute_script('mobile: scrollBackTo', {
+    'elementId': lst.id,
+    'elementToId': target.id
+})
+```
+
+```javascript WebdriverIO
+const list = await driver.$('android=new UiSelector().resourceId("com.example:id/recycler")');
+const target = await driver.$('~First Item');
+
+await driver.executeScript('mobile: scrollBackTo', [{
+    elementId: list.elementId,
+    elementToId: target.elementId
+}]);
+```
+
+</CodeGroup>

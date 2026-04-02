@@ -1,0 +1,170 @@
+---
+title: "MJPEG screen streaming"
+description: "Stream real-time device screenshots using the built-in MJPEG server"
+---
+
+The UiAutomator2 driver provides two independent ways to stream the device screen:
+
+1. **Built-in device MJPEG server** — runs entirely on the device, no extra host tools required.
+2. **GStreamer-based host streaming** — host-side pipeline using `mobile: startScreenStreaming`, requires GStreamer on the host.
+
+This page covers both approaches. For most use cases, the built-in device MJPEG server is the simpler option.
+
+## Built-in device MJPEG server
+
+The UiAutomator2 server running on the Android device includes a built-in MJPEG broadcaster. It captures the screen at a configurable rate, encodes each frame as JPEG, and serves them over TCP using the `multipart/x-mixed-replace` format.
+
+The MJPEG server starts automatically when the UiAutomator2 instrumentation starts and listens on port `7810` on the device by default.
+
+### How it works
+
+1. When the UiAutomator2 server starts, an MJPEG server thread begins listening on the configured device port (default `7810`).
+2. For each TCP client that connects, the server sends an HTTP response with `Content-Type: multipart/x-mixed-replace; boundary=--BoundaryString`, followed by a continuous stream of JPEG frames.
+3. Frames are produced at the configured framerate via `UiAutomation.takeScreenshot()`, then optionally scaled and compressed before being sent to all connected clients.
+4. When no clients are connected, the server reduces its capture rate to save CPU.
+
+### Capabilities
+
+Use these capabilities when creating a session to expose the device stream to the host.
+
+<AccordionGroup>
+
+<Accordion title="appium:mjpegServerPort">
+
+**Type:** `integer`
+
+The port on the **host machine** to which the device MJPEG port is forwarded via ADB. The driver runs `adb forward <host port> <device port>` automatically when this capability is set.
+
+After the session starts, the stream is reachable at `http://localhost:<mjpegServerPort>` from the host.
+
+<Note>When running parallel sessions, use a unique `appium:mjpegServerPort` per session to avoid port conflicts.</Note>
+
+```python python
+from appium.options.android import UiAutomator2Options
+
+options = UiAutomator2Options()
+options.mjpeg_server_port = 7810  # host port
+driver = webdriver.Remote('http://localhost:4723', options=options)
+# Stream available at http://localhost:7810
+```
+
+</Accordion>
+
+<Accordion title="appium:mjpegScreenshotUrl">
+
+**Type:** `string` (URL)
+
+URL of an MJPEG service that provides real-time device screenshots. When set, the driver's standard `getScreenshot()` command returns the latest frame from that stream instead of calling the UiAutomator2 server's `/screenshot` endpoint.
+
+Typical usage: set `appium:mjpegServerPort` to forward the device stream, then set `appium:mjpegScreenshotUrl` to `http://localhost:<mjpegServerPort>` so all screenshot calls use the stream.
+
+If no frame has been received yet when a screenshot is requested, the driver falls back to the regular screenshot endpoint and logs a warning.
+
+```python python
+options.mjpeg_server_port = 7810
+options.mjpeg_screenshot_url = 'http://localhost:7810'
+```
+
+</Accordion>
+
+</AccordionGroup>
+
+### Settings
+
+These settings control the MJPEG broadcaster on the device. They can be changed at any time during a session using the [Settings API](/advanced/settings).
+
+| Setting | Type | Range | Default | Description |
+|---------|------|-------|---------|-------------|
+| `mjpegServerPort` | `int` | 1024–65535 | `7810` | Port on the device where the MJPEG server listens. |
+| `mjpegServerFramerate` | `int` | 1–60 | `10` | Maximum frames per second. Higher values increase device CPU load. |
+| `mjpegScalingFactor` | `int` | 1–100 | `50` | Scale factor as a percentage (100 = original size). Lower values reduce size and CPU usage. |
+| `mjpegServerScreenshotQuality` | `int` | 1–100 | `50` | JPEG quality (100 = best). Higher values improve quality but increase CPU and bandwidth usage. |
+| `mjpegBilinearFiltering` | `boolean` | — | `false` | Apply bilinear filtering during resize. Slightly improves scaled image quality at a small performance cost. |
+
+```python python
+driver.update_settings({
+    'mjpegServerFramerate': 30,
+    'mjpegScalingFactor': 75,
+    'mjpegServerScreenshotQuality': 80,
+})
+```
+
+### Using the stream
+
+<Steps>
+  <Step title="Set the mjpegServerPort capability">
+    Add `appium:mjpegServerPort` to your session capabilities with a free port on the host (for example, `7810`). The driver will forward the device MJPEG port to that host port via ADB.
+  </Step>
+  <Step title="Connect a client">
+    Once the session starts, open `http://localhost:<mjpegServerPort>` in a browser or any MJPEG-capable client to view the live device screen.
+  </Step>
+  <Step title="Optionally use the stream for screenshots">
+    Set `appium:mjpegScreenshotUrl` to the same URL (for example, `http://localhost:7810`) so that calls to `driver.get_screenshot_as_base64()` return the latest frame from the stream instead of making a separate screenshot request.
+  </Step>
+</Steps>
+
+### Screenshot behavior
+
+| Configuration | Behavior |
+|---------------|----------|
+| Without `appium:mjpegScreenshotUrl` | Screenshot command calls `GET /screenshot` on the UiAutomator2 server. |
+| With `appium:mjpegScreenshotUrl` | Screenshot command returns the latest frame from the MJPEG stream (as base64 PNG). Falls back to server screenshot if no frame is available yet. |
+
+### Performance considerations
+
+- Higher `mjpegServerFramerate` increases screenshot captures per second and device CPU load.
+- Higher `mjpegServerScreenshotQuality` increases JPEG encoding cost and network bandwidth.
+- Higher `mjpegScalingFactor` (larger images) increases encoding time and payload size.
+- Enabling `mjpegBilinearFiltering` adds a small extra processing cost.
+
+For long-running or parallel streaming, start with moderate defaults (framerate `10`, scaling factor `50`, quality `50`) and adjust as needed.
+
+### Parallel testing
+
+When running multiple sessions simultaneously:
+
+- Assign a **unique** `appium:mjpegServerPort` to each session so each device's MJPEG stream is forwarded to a different host port.
+- This avoids port conflicts and ensures each client connects to the correct device stream.
+
+---
+
+## GStreamer-based screen streaming
+
+The driver also provides `mobile: startScreenStreaming` and `mobile: stopScreenStreaming` commands for a **host-side** streaming pipeline based on GStreamer.
+
+<Warning>
+This approach requires GStreamer with `gst-plugins-base`, `gst-plugins-good`, and `gst-plugins-bad` installed on the **host machine** and available on `PATH`. It also requires the `adb_screen_streaming` server security feature to be enabled.
+</Warning>
+
+### `mobile: startScreenStreaming`
+
+Starts the GStreamer-based MJPEG server on the host. The host captures the device screen via ADB and broadcasts it over the network.
+
+```python python
+driver.execute_script('mobile: startScreenStreaming', {
+    'width': 1080,
+    'height': 1920,
+    'considerRotation': True,
+    'quality': 70,
+    'bitRate': 1000000,
+})
+```
+
+### `mobile: stopScreenStreaming`
+
+Stops the host-side GStreamer streaming pipeline started by `mobile: startScreenStreaming`.
+
+```python python
+driver.execute_script('mobile: stopScreenStreaming')
+```
+
+---
+
+## Choosing an approach
+
+| Goal | Recommended approach |
+|------|---------------------|
+| Expose device screen as MJPEG on the host | Set `appium:mjpegServerPort`; connect to `http://localhost:<port>`. |
+| Use MJPEG stream for screenshots | Also set `appium:mjpegScreenshotUrl` to the same URL. |
+| Tune framerate, size, or quality | Use the Settings API: `mjpegServerFramerate`, `mjpegScalingFactor`, `mjpegServerScreenshotQuality`. |
+| Host-side GStreamer pipeline | Use `mobile: startScreenStreaming` / `mobile: stopScreenStreaming`. |

@@ -1,0 +1,195 @@
+---
+title: "Element finding"
+description: "Element location strategies supported by the UiAutomator2 driver"
+---
+
+UiAutomator2 driver supports five location strategies for finding elements. Each maps to a native Android API and has a different performance characteristic.
+
+| Strategy | Maps to | Speed |
+| --- | --- | --- |
+| `id` | `By.res` (resource name) | ⭐⭐⭐⭐⭐ |
+| `accessibilityId` | `By.desc` (content description) | ⭐⭐⭐⭐⭐ |
+| `className` | `By.clazz` (class name) | ⭐⭐⭐⭐⭐ |
+| `-android uiautomator` | `UiSelector` | ⭐⭐⭐⭐ |
+| `xpath` | Page source XML tree | ⭐⭐⭐ |
+
+## id
+
+Maps to UiAutomator's [`By.res`](https://developer.android.com/reference/androidx/test/uiautomator/BySelector#res(java.lang.String)) locator. Performs an exact match on the element's resource name. If the package prefix is not included, it is added automatically from the current application under test.
+
+Example value: `com.mycompany:id/resourceId`
+
+<CodeGroup>
+
+```java Java
+WebElement element = driver.findElement(AppiumBy.id("com.mycompany:id/myButton"));
+```
+
+```python Python
+element = driver.find_element(AppiumBy.ID, "com.mycompany:id/myButton")
+```
+
+```javascript WebdriverIO
+const element = await driver.$('id=com.mycompany:id/myButton');
+```
+
+</CodeGroup>
+
+## accessibilityId
+
+Maps to UiAutomator's [`By.desc`](https://developer.android.com/reference/androidx/test/uiautomator/BySelector#desc(java.lang.String)) locator. Performs an exact match on the element's content description.
+
+In applications built with [React Native](https://reactnative.dev/), this strategy matches the value of the `accessibilityLabel` prop.
+
+Example value: `my description`
+
+<CodeGroup>
+
+```java Java
+WebElement element = driver.findElement(AppiumBy.accessibilityId("Submit"));
+```
+
+```python Python
+element = driver.find_element(AppiumBy.ACCESSIBILITY_ID, "Submit")
+```
+
+```javascript WebdriverIO
+const element = await driver.$('~Submit');
+```
+
+</CodeGroup>
+
+## className
+
+Maps to UiAutomator's [`By.clazz`](https://developer.android.com/reference/androidx/test/uiautomator/BySelector#clazz(java.lang.String)) locator. Performs an exact match on the element's fully qualified class name.
+
+Example value: `android.widget.TextView`
+
+<CodeGroup>
+
+```java Java
+WebElement element = driver.findElement(AppiumBy.className("android.widget.TextView"));
+```
+
+```python Python
+element = driver.find_element(AppiumBy.CLASS_NAME, "android.widget.TextView")
+```
+
+```javascript WebdriverIO
+const element = await driver.$('android.widget.TextView');
+```
+
+</CodeGroup>
+
+## -android uiautomator
+
+Maps to UiAutomator's [`UiSelector`](https://developer.android.com/reference/androidx/test/uiautomator/UiSelector) locator. Supports advanced operations including scrolling into view. [`UiScrollable`](https://developer.android.com/reference/androidx/test/uiautomator/UiScrollable) is also supported.
+
+<Warning>
+  Google is [deprecating](https://developer.android.com/training/testing/other-components/ui-automator-legacy#ui-automator) `UiCollection`, `UiObject`, `UiScrollable`, and `UiSelector` from the UiAutomator framework. This will render all `-android uiautomator`-based locators invalid. Avoid using this strategy for new code.
+</Warning>
+
+### Basic examples
+
+<CodeGroup>
+
+```java Java
+// Find by text
+WebElement element = driver.findElement(AppiumBy.androidUIAutomator(
+    "new UiSelector().text(\"Animation\")"
+));
+
+// Find by resource ID
+WebElement element = driver.findElement(AppiumBy.androidUIAutomator(
+    "new UiSelector().resourceId(\"com.example:id/list\").instance(0)"
+));
+```
+
+```python Python
+# Find by text
+element = driver.find_element(
+    AppiumBy.ANDROID_UIAUTOMATOR,
+    'new UiSelector().text("Animation")'
+)
+
+# Find first element by class
+element = driver.find_element(
+    AppiumBy.ANDROID_UIAUTOMATOR,
+    'new UiSelector().className("android.widget.TextView").instance(0)'
+)
+```
+
+```javascript WebdriverIO
+// Find by text
+const element = await driver.$('android=new UiSelector().text("Animation")');
+```
+
+</CodeGroup>
+
+### Scrolling into view
+
+One of the more powerful capabilities of `UiSelector` is the ability to scroll a list until an element becomes visible:
+
+```java
+// Scroll the list until "Radio Group" is visible, then return it
+WebElement element = driver.findElement(AppiumBy.androidUIAutomator(
+    "new UiScrollable(new UiSelector().resourceId(\"android:id/list\"))" +
+    ".scrollIntoView(new UiSelector().text(\"Radio Group\"))"
+));
+```
+
+`scrollIntoView` scrolls to the very beginning of the scrollable control and then scrolls step-by-step until the target element is found. The element is returned after it becomes visible.
+
+For a complete reference of `UiSelector` and `UiScrollable` expressions, consult the [Android UiSelector documentation](https://developer.android.com/reference/androidx/test/uiautomator/UiSelector).
+
+<Tip>
+  Prefer `instance()` over `index()` when selecting among multiple matching elements — the `index` selector is unreliable.
+</Tip>
+
+## xpath
+
+XPath strategy builds an XML representation of the view hierarchy using the same tree produced by the page source API, then evaluates the expression against it.
+
+XPath 1.0 is supported in all server versions. Both XPath 1.0 and 2.0 are supported starting from `appium-uiautomator2-server` version 4.25.0.
+
+Example value: `//android.view.View[@text="Regular" and @checkable="true"]`
+
+<Note>
+  XPath is generally slower than other strategies because it requires building and traversing the full page source XML tree. Prefer `id`, `accessibilityId`, or `className` when possible.
+</Note>
+
+<CodeGroup>
+
+```java Java
+WebElement element = driver.findElement(
+    By.xpath("//android.widget.TextView[@text=\"Animation\"]")
+);
+
+// XPath 2.0 example (server >= 4.25.0)
+WebElement element = driver.findElement(
+    By.xpath("//android.view.View[@text=\"Regular\" and @checkable=\"true\"]")
+);
+```
+
+```python Python
+element = driver.find_element(
+    AppiumBy.XPATH,
+    '//android.widget.TextView[@text="Animation"]'
+)
+```
+
+```javascript WebdriverIO
+const element = await driver.$(
+    '//android.widget.TextView[@text="Animation"]'
+);
+```
+
+</CodeGroup>
+
+### XPath 1.0 enforcement
+
+If you encounter issues with XPath 2.0 locators, you can fall back to XPath 1.0 at any point in your session by updating the `enforceXPath1` setting:
+
+```python Python
+driver.update_settings({"enforceXPath1": True})
+```

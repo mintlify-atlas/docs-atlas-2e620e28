@@ -1,0 +1,54 @@
+---
+title: "Introduction"
+description: "Overview of the Appium UiAutomator2 Driver for Android automation"
+---
+
+Appium UiAutomator2 Driver is a test automation framework for Android devices. It automates native, hybrid, and mobile web apps on both emulators and real devices, and is part of the [Appium](https://github.com/appium/appium) mobile automation ecosystem.
+
+## What it does
+
+The driver lets you write automated tests against Android applications using the [W3C WebDriver protocol](https://www.w3.org/TR/webdriver/), with additional Android-specific extensions for scenarios the standard protocol does not cover. You can automate:
+
+- **Native apps** — Android applications built with the Android SDK
+- **Hybrid apps** — apps with embedded web views (via Chromedriver integration)
+- **Mobile web** — the Chrome browser or other Chromium-based browsers on Android
+
+<Warning>
+  Since major version 5.0.0, this driver is only compatible with Appium 3. Earlier versions of Appium are not supported.
+</Warning>
+
+## Architecture
+
+When you send a command from your test client, the driver routes it through one of two paths:
+
+1. **UiAutomator2 server** — most UI interaction commands (tap, swipe, find element, etc.) are proxied to the [appium-uiautomator2-server](https://github.com/appium/appium-uiautomator2-server) component, which runs on the device and drives Google's [UiAutomator](https://developer.android.com/training/testing/ui-automator) framework.
+2. **appium-adb and platform tools** — device-level commands (install/uninstall apps, manage permissions, read logcat, control emulators) are handled directly via [appium-adb](https://github.com/appium/appium-adb) and other Android platform tool helpers.
+
+This split allows the driver to cover both UI automation and device management within a single session.
+
+## Protocol and extensions
+
+The driver operates within the W3C WebDriver protocol. On top of the standard endpoints, it exposes a set of `mobile:` extension commands for Android-specific operations such as:
+
+- Starting and stopping activities
+- Managing permissions
+- Interacting with the clipboard and notifications
+- Controlling network and location settings
+- Injecting gestures not covered by the standard Actions API
+
+## Where to go next
+
+<CardGroup cols={2}>
+  <Card title="Quickstart" icon="rocket" href="/quickstart">
+    Install the driver and run your first Android test in minutes.
+  </Card>
+  <Card title="Capabilities" icon="sliders" href="/capabilities/general">
+    Full reference for all supported session capabilities.
+  </Card>
+  <Card title="Finding elements" icon="magnifying-glass" href="/guides/element-finding">
+    Learn the available locator strategies for Android UI elements.
+  </Card>
+  <Card title="App management" icon="mobile" href="/api/app-management">
+    Install, launch, and manage apps during a test session.
+  </Card>
+</CardGroup>
